@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Parser</RootNamespace>
+    <RootNamespace>DocumentParser</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
-﻿using Parser.Elements.Implementations;
+﻿using DocumentParser.Elements.Implementations;
 
-namespace Parser.Visitors
+namespace DocumentParser.Visitors
 {
     public interface IDocumentVisitor
     {

@@ -2,9 +2,9 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
-using Parser.Domain;
-using Parser.Elements.Implementations;
-using Parser.Visitors.implementations;
+using DocumentParser.Domain;
+using DocumentParser.Elements.Implementations;
+using DocumentParser.Visitors.implementations;
 
 namespace ParserTest;
 
@@ -155,7 +155,7 @@ public class UnitTest1
                         String alt = match.Value;
 
                         temp = altTextRegex.Replace(temp, "");
-                        docsElement = new ImageElement(temp, alt.Substring(1, alt.Length - 1));
+                        docsElement = new ImageElement(temp, alt.Substring(1, alt.Length -2));
                     }
 
                 }
@@ -191,9 +191,19 @@ public class UnitTest1
                 {
                     String attributes = match.Value;
                     String[] temp = new String[3];
-                    String[] copy = attributes.Substring(1, attributes.Length - 1).Split(",");
+                    String[] copy = attributes.Substring(1, attributes.Length - 2).Split(",");
 
                     Array.Copy(copy, 0, temp, 0, Math.Min(copy.Length, 3));
+
+                    Regex regex = new Regex("^#");
+                    Match match1 = regex.Match(temp[0]);
+
+                    if (match1.Success)
+                    {
+                        // Attribute 에 대한 재정의 필
+                        continue;
+                    }
+
 
                     docsElement = new AttributeElement(temp[0], temp[1], temp[2]);
                 }
@@ -273,11 +283,11 @@ public class UnitTest1
 
                 if (match.Success)
                 {
-                    string href = match.Groups[1].Value + match.Groups[2];
-                    string altText = match.Groups[3].Value;
+                    string href = match.Groups[1].Value + match.Groups[2].Value;
+                    string altText = match.Groups[4].Value;
 
                     docsElements.Add(new DocsElement(s[..match.Index]));
-                    docsElement = new AnchorElement(href, altText);
+                    docsElements.Add(new AnchorElement(href, altText));
                     docsElements.Add(new DocsElement(s.Substring(match.Index + match.Length)));
                     continue;
 
@@ -285,8 +295,11 @@ public class UnitTest1
                 else if ((match = protocolExcludeAltTextRegex.Match(s)).Success)
                 {
                     //match = new Regex("(\\S+://[^ ])+ $").Match(s)
-
-                    docsElement = new AnchorElement(s);
+                    string href = match.Groups[1].Value;
+                    docsElements.Add(new DocsElement(s[..match.Index]));
+                    docsElements.Add(new AnchorElement(href));
+                    docsElements.Add(new DocsElement(s.Substring(match.Index + match.Length)));
+                    continue;
                 }
 
             }

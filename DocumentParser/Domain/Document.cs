@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Parser.Domain
+namespace DocumentParser.Domain
 {
 	public struct Document
 	{

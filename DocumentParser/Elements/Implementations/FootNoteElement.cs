@@ -1,4 +1,6 @@
-﻿namespace Parser.Elements.Implementations
+﻿using DocumentParser.Visitors;
+
+namespace DocumentParser.Elements.Implementations
 {
     public class FootNoteElement : DocsElement
     {
@@ -9,6 +11,11 @@
         public string FootNote
         {
             get { return Value.ToString(); }
+        }
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
         }
     }
 }

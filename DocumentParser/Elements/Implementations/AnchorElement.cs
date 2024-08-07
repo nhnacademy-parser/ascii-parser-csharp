@@ -1,11 +1,13 @@
-﻿namespace Parser.Elements.Implementations
+﻿using DocumentParser.Visitors;
+
+namespace DocumentParser.Elements.Implementations
 {
     public class AnchorElement : DocsElement
     {
 
         public AnchorElement(string href): base(href)
         {
-            AltText = "";
+            AltText = href;
         }
 
         public AnchorElement(string href, string altText) : this(href)
@@ -19,6 +21,10 @@
         {
             get { return Value.ToString(); }
         }
-        
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
+        }
     }
 }

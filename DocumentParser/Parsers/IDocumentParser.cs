@@ -1,15 +1,16 @@
 ﻿using System;
 using System.IO;
-using Parser.Domain;
+using DocumentParser.Domain;
+using DocumentParser.Elements.Implementations;
 
-namespace parser.Parsers
+namespace DocumentParser.Parsers
 {
     public interface IDocumentParser
     {
         Document LoadFile(string filePath);
-        Document LoadFile(File file);
+        Document LoadFile(FileStream file);
 
-        IDocumentParser Parse(Document document);
+        DocsElement Parse(string document);
     }
 }
 

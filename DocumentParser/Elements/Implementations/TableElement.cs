@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using DocumentParser.Visitors;
 
-namespace Parser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations
 {
     public class TableElement : DocsElement
     {
@@ -13,6 +14,11 @@ namespace Parser.Elements.Implementations
 
         public string[] ColumnHeading { get; }
         public List<string[]> Rows { get; }
-        public string Title { get { return Value.ToString(); } } 
+        public string Title { get { return Value.ToString(); } }
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
+        }
     }
 }

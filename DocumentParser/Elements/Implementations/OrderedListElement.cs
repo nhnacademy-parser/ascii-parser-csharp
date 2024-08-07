@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using DocumentParser.Visitors;
 
-namespace Parser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations
 {
     public class OrderedListElement : DocsElement
     {
@@ -15,5 +16,10 @@ namespace Parser.Elements.Implementations
         }
 
         public int Level { get; }
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
+        }
     }
 }

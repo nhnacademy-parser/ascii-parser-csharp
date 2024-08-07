@@ -1,4 +1,6 @@
-﻿namespace Parser.Elements.Implementations
+﻿using DocumentParser.Visitors;
+
+namespace DocumentParser.Elements.Implementations
 {
     public class AttributeElement : DocsElement
     {
@@ -19,6 +21,11 @@
         public string By
         {
             get { return Value.ToString();  }
+        }
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
         }
     }
 }

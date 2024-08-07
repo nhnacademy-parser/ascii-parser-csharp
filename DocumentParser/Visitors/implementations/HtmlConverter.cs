@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Parser.Elements.Implementations;
+using DocumentParser.Elements.Implementations;
 
-namespace Parser.Visitors.implementations
+namespace DocumentParser.Visitors.implementations
 {
     public class HtmlConverter : IDocumentVisitor
     {
@@ -28,7 +28,7 @@ namespace Parser.Visitors.implementations
 
             builder.Append("<a href=").Append(DOUBLE_QUOTES).Append(element.Href).Append(DOUBLE_QUOTES)
                     .Append(">");
-            builder.Append(element.Href);
+            builder.Append(element.AltText);
             builder.Append("</a>");
 
             return builder.ToString();
@@ -73,7 +73,7 @@ namespace Parser.Visitors.implementations
 
         public string Visit(ExampleBlockElement element)
         {
-            return "<p>" + element + "</p>";
+            return "<p>" + element.Example + "</p>";
         }
 
         public string Visit(FootNoteElement element)
@@ -114,7 +114,7 @@ namespace Parser.Visitors.implementations
 
         public string Visit(ImageElement element)
         {
-            return "<img class=image src=" + DOUBLE_QUOTES + element + DOUBLE_QUOTES + " alt=" +
+            return "<img class=image src=" + DOUBLE_QUOTES + element.Href + DOUBLE_QUOTES + " alt=" +
                     DOUBLE_QUOTES + element.AltText + DOUBLE_QUOTES + "/>";
         }
 
@@ -122,18 +122,18 @@ namespace Parser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<em>").Append(element).Append("</em>");
+            builder.Append("<em>").Append(element.ItalicText).Append("</em>");
             return builder.ToString();
         }
 
         public string Visit(ListingBlockElement element)
         {
-            throw new System.NotImplementedException();
+            return "<p>" + element.Value.ToString() + "</p>";
         }
 
         public string Visit(OrderedListElement element)
         {
-            return "<ol>" + element + "</ol>";
+            return "<ol>" + element.Value.ToString() + "</ol>";
         }
 
         public string Visit(QuotationElement element)
@@ -142,7 +142,7 @@ namespace Parser.Visitors.implementations
 
             builder.Append("<blockquote>").Append(LINE_BREAK);
             builder.Append("<div class=" + DOUBLE_QUOTES + "paragraph\">").Append(LINE_BREAK);
-            builder.Append("<p>").Append(element).Append("</p>").Append(LINE_BREAK);
+            builder.Append("<p>").Append(element.Value.ToString()).Append("</p>").Append(LINE_BREAK);
             builder.Append("</div>").Append(LINE_BREAK);
             builder.Append("</blockquote>").Append(LINE_BREAK);
             builder.Append(Visit(element.AttributeElement));
@@ -192,12 +192,12 @@ namespace Parser.Visitors.implementations
 
         public string Visit(TitleElement element)
         {
-            return "<div class=" + DOUBLE_QUOTES + "title\">" + element + "</div>";
+            return "<div class=" + DOUBLE_QUOTES + "title\">" + element.Title + "</div>";
         }
 
         public string Visit(UnOrderedListElement element)
         {
-            return "<ul>" + element + "</ul>";
+            return "<ul>" + element.Value + "</ul>";
         }
     }
 }

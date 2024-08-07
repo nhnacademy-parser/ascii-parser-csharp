@@ -1,6 +1,6 @@
-﻿using Parser.Visitors;
+﻿using DocumentParser.Visitors;
 
-namespace Parser.Elements
+namespace DocumentParser.Elements
 {
     public interface IElement
     {

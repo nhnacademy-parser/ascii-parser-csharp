@@ -1,6 +1,6 @@
-﻿using Parser.Visitors;
+﻿using DocumentParser.Visitors;
 
-namespace Parser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations
 {
     public class HeadingElement : DocsElement
     {

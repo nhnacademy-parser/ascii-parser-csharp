@@ -1,4 +1,6 @@
-﻿namespace Parser.Elements.Implementations
+﻿using DocumentParser.Visitors;
+
+namespace DocumentParser.Elements.Implementations
 {
     public class ImageElement : DocsElement
     {
@@ -15,9 +17,14 @@
 
         public string AltText { get; }
 
-        public string GetHref()
+        public string Href
         {
-            return Value.ToString();
+            get { return Value.ToString(); }
+        }
+
+        public override object Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
         }
     }
 }

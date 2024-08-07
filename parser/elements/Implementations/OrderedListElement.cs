@@ -2,15 +2,14 @@
 
 namespace Parser.Elements.Implementations
 {
-    public class UnOrderedListElement:DocsElement
-
+    public class OrderedListElement : DocsElement
     {
-        public UnOrderedListElement(List<DocsElement> value) : base(value)
+        public OrderedListElement(List<DocsElement> value) : base(value)
         {
             Level = 1;
         }
 
-        public UnOrderedListElement(List<DocsElement> value, int level) : base(value)
+        public OrderedListElement(List<DocsElement> value, int level) : base(value)
         {
             Level = level;
         }

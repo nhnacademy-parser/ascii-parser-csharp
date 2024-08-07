@@ -1,41 +1,44 @@
-﻿using parser.elements.Implementations;
+﻿using Parser.Elements.Implementations;
 
-namespace parser.visitors
+namespace Parser.Visitors
 {
     public interface IDocumentVisitor
     {
-        string Visit(DocsElement element);
-
-        string Visit(HeadingElement element);
-
-        string Visit(ExampleElement element);
-
-        string Visit(TitleElement element);
-
-        string Visit(ListElement element);
-
-        string Visit(UnOrderedListElement element);
-
-        string Visit(SideBarElement element);
-
-        string Visit(ImageElement element);
-
-        string Visit(TableElement element);
-
-        string Visit(QuotationElement element);
+        string Visit(AnchorElement element);
 
         string Visit(AttributeElement element);
+
+        string Visit(BoldTextElement element);
 
         string Visit(CommentElement element);
 
         string Visit(CrossReferenceElement element);
 
-        string Visit(AnchorElement element);
+        string Visit(DocsElement element);
+
+        string Visit(ExampleBlockElement element);
+
+        string Visit(FootNoteElement element);
+
+        string Visit(HeadingElement element);
+
+        string Visit(ImageElement element);
 
         string Visit(ItalicTextElement element);
 
-        string Visit(BoldTextElement element);
+        string Visit(ListingBlockElement element);
 
-        string Visit(FootNoteElement element);
+        string Visit(OrderedListElement element);
+
+        string Visit(QuotationElement element);
+
+        string Visit(SideBarElement element);
+
+        string Visit(TableElement element);
+
+        string Visit(TitleElement element);
+
+        string Visit(UnOrderedListElement element);
+
     }
 }

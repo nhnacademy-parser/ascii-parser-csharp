@@ -1,10 +1,10 @@
-﻿using parser.visitors;
+﻿using Parser.Visitors;
 
-namespace parser.elements
+namespace Parser.Elements
 {
     public interface IElement
     {
-        void Accept(IDocumentVisitor visitor);
+        object Accept(IDocumentVisitor visitor);
     }
 }
 

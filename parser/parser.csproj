@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Parser</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Parsers\" />
+    <None Remove="Parsers\Implementations\" />
+    <None Remove="Domain\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Parsers\" />
+    <Folder Include="Parsers\Implementations\" />
+    <Folder Include="Domain\" />
+  </ItemGroup>
 </Project>

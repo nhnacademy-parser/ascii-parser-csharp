@@ -1,6 +1,14 @@
-﻿namespace parser.elements.Implementations
+﻿namespace Parser.Elements.Implementations
 {
-    public class FootNoteElement
+    public class FootNoteElement : DocsElement
     {
+        public FootNoteElement(string example) : base(example)
+        {
+        }
+
+        public string FootNote
+        {
+            get { return Value.ToString(); }
+        }
     }
 }

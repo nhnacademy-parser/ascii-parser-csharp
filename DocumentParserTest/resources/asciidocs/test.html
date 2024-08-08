@@ -1,96 +1,150 @@
+
 <h1 id="_asciidoc_article_title"> AsciiDoc Article Title</h1>
-<p>Firstname Lastname <author@asciidoctor.org></p>
-<p>3.0, July 29, 2022: AsciiDoc article template</p>
+Firstname Lastname 
+3.0, July 29, 2022: AsciiDoc article template
 <p>:toc:</p>
 <p>:icons: font</p>
 <p>:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/</p>
-<p></p>
-<p>Content entered directly below the header but before the first section heading is called the preamble.</p>
-<p></p>
+
+Content entered directly below the header but before the first section heading is called the preamble.
+
 <h2 id="_first_level_heading"> First level heading</h2>
-<p></p>
-<p>This is a paragraph with a </p>
-<p>bold</p>
-<p> word and an _italicized_ word.</p>
-<p></p>
+
+This is a paragraph with a <strong>bold</strong> word and an <em>italicized</em> word.
+
 <div class="title">Image caption</div>
 <img class=image src="image-file-name.png" alt="I am the image alt text."/>
-<p></p>
-<p>This is another paragraph.</p>
-<p>I am footnote text and will be displayed at the bottom of the article.</p>
-<p></p>
-<p></p>
+
+This is another paragraph.<sup class="footnote">[<a id="_footnoteref_1"class="footnote"href="#_footnoteref_1">1</a>]</sup>
+
 <h3 id="_second_level_heading"> Second level heading</h3>
-<p></p>
+
 <div class="title">Unordered list title</div>
-<ul>System.Collections.Generic.List`1[DocumentParser.Elements.Implementations.DocsElement]</ul>
-<ul>System.Collections.Generic.List`1[DocumentParser.Elements.Implementations.DocsElement]</ul>
-<ul>System.Collections.Generic.List`1[DocumentParser.Elements.Implementations.DocsElement]</ul>
-<ul>System.Collections.Generic.List`1[DocumentParser.Elements.Implementations.DocsElement]</ul>
-<ul>System.Collections.Generic.List`1[DocumentParser.Elements.Implementations.DocsElement]</ul>
-<p></p>
-<p>This is a paragraph.</p>
-<p></p>
+<ul>
+<li>
+ list item 1<ul>
+<li>
+ nested list item<ul>
+<li>
+ nested nested list item 1</li>
+</ul>
+<ul>
+<li>
+ nested nested list item 2</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<ul>
+<li>
+ list item 2</li>
+</ul>
+
+
+This is a paragraph.
+
 <div class="title">Example block title</div>
-<h4 id="12313">12313</h4>
-<p>Content in an example block is subject to normal substitutions.</p>
-<p>
-.Sidebar title
-****
-Sidebars contain aside text and are subject to normal substitutions.
-****
+<div><p>Content in an example block is subject to normal substitutions.</p></div>
+<div></div>
 
-==== Third level heading
+<div class="title">Sidebar title</div>
+<div class="side-bar"><pre>Sidebars contain aside text and are subject to normal substitutions.</pre></div>
+<div class="side-bar"></div>
 
-[#id-for-listing-block]
-.Listing block title
-----
-Content in a listing block is subject to verbatim substitutions.
-Listing block content is commonly used to preserve code input.
-----
+<h4 id="_third_level_heading"> Third level heading</h4>
 
-===== Fourth level heading
+<div id="id-for-listing-block"></div>
+<div class="title">Listing block title</div>
+<div><pre>Content in a listing block is subject to verbatim substitutions.</pre><pre>Listing block content is commonly used to preserve code input.</pre></div>
+<div></div>
 
-.Table title
-|===
-|Column heading 1 |Column heading 2
+<h5 id="_fourth_level_heading"> Fourth level heading</h5>
 
-|Column 1, row 1
-|Column 2, row 1
+<div class="title">Table title</div>
+<table>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
-|Column 1, row 2
-|Column 2, row 2
-|===
+<table>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
-====== Fifth level heading
 
-[quote,firstname lastname,movie title]
-____
-I am a block quote or a prose excerpt.
-I am subject to normal substitutions.
-____
+<h6 id="_fifth_level_heading"> Fifth level heading</h6>
 
-[verse,firstname lastname,poem title and more]
-____
-I am a verse block.
-  Indents and endlines are preserved in verse blocks.
-____
+<div class="attribution">
+&#8212; firstname lastname<br>
+<cite>movie title</cite>
+</div>
 
-== First level heading
+<blockquote>
+<div class="paragraph">
+<p>I am a block quote or a prose excerpt.I am subject to normal substitutions.</p>
+</div>
+</blockquote>
+
+<blockquote>
+<div class="paragraph">
+<p></p>
+</div>
+</blockquote>
+
+
+<div class="attribution">
+&#8212; firstname lastname<br>
+<cite>poem title and more</cite>
+</div>
+
+<blockquote>
+<div class="paragraph">
+<p>I am a verse block.  Indents and endlines are preserved in verse blocks.</p>
+</div>
+</blockquote>
+
+<blockquote>
+<div class="paragraph">
+<p></p>
+</div>
+</blockquote>
+
+
+<h2 id="_first_level_heading"> First level heading</h2>
 
 TIP: There are five admonition labels: Tip, Note, Important, Caution and Warning.
 
-// I am a comment and won't be rendered.
+<!-- I am a comment and won't be rendered.-->
 
-. ordered list item
-.. nested ordered list item
-. ordered list item
+<ol><ul>
+<li>
+ ordered list item<ol><ul>
+<li>
+ nested ordered list item</li>
+</ol>
+</li>
+</ol>
 
-The text at the end of this sentence is cross referenced to <<_third_level_heading,the third level heading>>
+<ol><ul>
+<li>
+ ordered list item</li>
+</ol>
 
-== First level heading
 
-This is a link to the https://docs.asciidoctor.org/home/[Asciidoctor documentation].
-This is a link to the https://docs.asciidoctor.org/home. end this follow Text
+The text at the end of this sentence is cross referenced to <a href="#_third_level_heading">the third level heading</a>
+
+<h2 id="_first_level_heading"> First level heading</h2>
+
+This is a link to the <a href="https://docs.asciidoctor.org/home/">Asciidoctor documentation</a>
+This is a link to the <a href="https://docs.asciidoctor.org/home.">https://docs.asciidoctor.org/home.</a>
 This is an attribute reference {url-quickref}[that links this text to the AsciiDoc Syntax Quick Reference].
-</p>

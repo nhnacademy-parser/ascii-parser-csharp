@@ -4,13 +4,13 @@ namespace DocumentParser.Elements.Implementations
 {
     public class BoldTextElement : DocsElement
     {
-        public BoldTextElement(string boldText) : base(boldText)
+        public BoldTextElement(object boldText) : base(boldText)
         {
         }
 
         public string BoldText
         {
-            get { return Value.ToString(); }
+            get { return ValueString; }
         }
 
         public override object Accept(IDocumentVisitor visitor)

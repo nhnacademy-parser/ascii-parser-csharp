@@ -1,5 +1,5 @@
 = AsciiDoc Article Title
-Firstname Lastname <author@asciidoctor.org>
+Firstname Lastname 
 3.0, July 29, 2022: AsciiDoc article template
 :toc:
 :icons: font
@@ -28,7 +28,7 @@ This is another paragraph.footnote:[I am footnote text and will be displayed at 
 This is a paragraph.
 
 .Example block title
-====12313
+====
 Content in an example block is subject to normal substitutions.
 ====
 

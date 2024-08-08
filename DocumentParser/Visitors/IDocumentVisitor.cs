@@ -26,7 +26,11 @@ namespace DocumentParser.Visitors
 
         string Visit(ItalicTextElement element);
 
+        string Visit(IdAttributeElement element);
+
         string Visit(ListingBlockElement element);
+
+        string Visit(LineElement element);
 
         string Visit(OrderedListElement element);
 

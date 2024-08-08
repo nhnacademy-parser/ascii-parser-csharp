@@ -4,7 +4,7 @@ namespace DocumentParser.Elements.Implementations
 {
     public class QuotationElement : DocsElement
     {
-        public QuotationElement(string quotation) : base(quotation)
+        public QuotationElement(object quotation) : base()
         {
         }
 

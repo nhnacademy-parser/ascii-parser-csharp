@@ -4,8 +4,9 @@ namespace DocumentParser.Elements.Implementations
 {
     public class ExampleBlockElement : DocsElement
     {
-        public ExampleBlockElement(string example) : base(example)
+        public ExampleBlockElement(string example) : base()
         {
+            Value = example;
         }
 
         public string Example {

@@ -5,7 +5,7 @@ namespace DocumentParser.Elements.Implementations
 {
     public class ListingBlockElement: DocsElement
     {
-        public ListingBlockElement(string example) : base(example)
+        public ListingBlockElement() : base()
         {
         }
 

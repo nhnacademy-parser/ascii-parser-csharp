@@ -5,12 +5,13 @@ namespace DocumentParser.Elements.Implementations
 {
     public class OrderedListElement : DocsElement
     {
-        public OrderedListElement(List<DocsElement> value) : base(value)
+        public OrderedListElement(object value) : base()
         {
+            Value = value;
             Level = 1;
         }
 
-        public OrderedListElement(List<DocsElement> value, int level) : base(value)
+        public OrderedListElement(object value, int level) : this(value)
         {
             Level = level;
         }
@@ -20,6 +21,18 @@ namespace DocumentParser.Elements.Implementations
         public override object Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);
+        }
+
+        public override bool EndOfContaier(DocsElement element)
+        {
+            if (element is OrderedListElement ol)
+            {
+                return ol.Level <= Level;
+            }
+            else
+            {
+                return string.IsNullOrWhiteSpace(element.Value.ToString());
+            }
         }
     }
 }

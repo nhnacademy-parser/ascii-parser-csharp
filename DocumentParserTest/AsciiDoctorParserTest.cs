@@ -5,19 +5,20 @@ using System.IO;
 using DocumentParser.Domain;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Visitors.implementations;
+using DocumentParser.Parsers.Implementations;
 
 namespace ParserTest;
 
-public class UnitTest1
+public class AsciiDoctorParserTest
 {
-    [Fact]
-    public void Test1()
+    //[Fact]
+    public void ParseUsingIfStatement()
     {
         
         FileStream sourceFileStream = File.OpenRead("../../../resources/asciidocs/template.adoc");
-        FileStream outputFileStream = File.Create("../../../resources/asciidocs/test.html");
-
         StreamReader inputStreamReader = new StreamReader(sourceFileStream);
+
+        FileStream outputFileStream = File.Create("../../../resources/asciidocs/test.html");
         StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
 
 
@@ -127,7 +128,7 @@ public class UnitTest1
                         }
                         stringBuilder.Append(s).Append("\n");
                     }
-                    docsElement = new ListingBlockElement(stringBuilder.ToString());
+                    docsElement = new ListingBlockElement();
                 }
                 else
                 {  // unorderedList(st. Markdown)
@@ -178,7 +179,7 @@ public class UnitTest1
                         }
                         stringBuilder.Append(s).Append("\n");
                     }
-                    docsElement = new TableElement(new string[0], new List<string[]>(), new TitleElement("")) ;
+                    docsElement = new TableElement() ;
                 }
 
             }
@@ -358,6 +359,39 @@ public class UnitTest1
         }
 
         outputStreamWriter.Write(builder.ToString());
+        outputStreamWriter.Flush();
+    }
+
+
+    //[Fact]
+    public void ParseUsingAsciiDocsParser()
+    {
+        AsciiDocsParser asciiDocsParser = new AsciiDocsParser();
+
+        Document document = asciiDocsParser.LoadFile("../../../resources/asciidocs/template.adoc");
+
+        FileStream outputFileStream = File.Create("../../../resources/asciidocs/parseTree.txt");
+        StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
+
+        outputStreamWriter.Write(document.ToString());
+        outputStreamWriter.Flush();
+    }
+
+    [Fact]
+    public void ConvertToHtml()
+    {
+        AsciiDocsParser asciiDocsParser = new AsciiDocsParser();
+
+        Document document = asciiDocsParser.LoadFile("../../../resources/asciidocs/template.adoc");
+
+        FileStream outputFileStream = File.Create("../../../resources/asciidocs/test.html");
+        StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
+
+        HtmlConverter htmlConverter = new HtmlConverter();
+
+        string htmlDocument = document.convert(htmlConverter);
+
+        outputStreamWriter.Write(htmlDocument);
         outputStreamWriter.Flush();
     }
 }

@@ -4,13 +4,13 @@ namespace DocumentParser.Elements.Implementations
 {
     public class ItalicTextElement : DocsElement
     {
-        public ItalicTextElement(string italicText) : base(italicText)
+        public ItalicTextElement(object italicText) : base(italicText)
         {
         }
 
         public string ItalicText
         {
-            get { return Value.ToString(); }
+            get { return ValueString; }
         }
 
         public override object Accept(IDocumentVisitor visitor)

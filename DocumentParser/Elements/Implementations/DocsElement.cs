@@ -1,6 +1,7 @@
 ﻿using System;
 using DocumentParser.Visitors;
 using System.Collections.Generic;
+using System.Text;
 
 namespace DocumentParser.Elements.Implementations
 {
@@ -8,7 +9,7 @@ namespace DocumentParser.Elements.Implementations
     {
         public DocsElement()
         {
-            Value = new List<DocsElement>();
+            Children = new List<DocsElement>();
         }
       
         public DocsElement(object value)
@@ -16,7 +17,9 @@ namespace DocumentParser.Elements.Implementations
             Value = value;
         }
 
-        public object Value { get; }
+        public object Value {get;  protected set; }
+        public string ValueString { get { return Value.ToString().TrimEnd(); } }
+        public DocsElement Next { get; set; }
         public DocsElement Parent
         {
             get; set;
@@ -29,24 +32,61 @@ namespace DocumentParser.Elements.Implementations
 
         public void AddChild(DocsElement docsElement)
         {
-            if(Value is List<DocsElement> children)
+            if(IsContainer)
             {
-                children.Add(docsElement);
+                Children.Add(docsElement);
+            }
+            else
+            {
+                throw new NotSupportedException("this Element can't have children");
             }
 
-            throw new NotSupportedException("this Element can't have children");
         }
 
-        public bool EndOfContaier(DocsElement element)
+        public virtual bool EndOfContaier(DocsElement element)
         {
-            throw new NotImplementedException();
+            if (element.IsContainer)
+            {
+                return Type.Equals(this.GetType(), element.GetType());
+            }
+
+            return false;
         }
 
         public bool IsContainer
         {
-            get { return Value is List<DocsElement>; }
+            get { return Children != null; }
         }
 
+        public List<DocsElement> Children { get; }
 
+        public DocsElement Append(DocsElement element)
+        { 
+            return Next = element;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            DocsElement temp = this;
+            for(; temp.Parent != null; temp = temp.Parent)
+            {
+                stringBuilder.Append(' ');
+            }
+
+            stringBuilder.Append(Value).Append('\n');
+
+            if(Children == null)
+            {
+                return stringBuilder.ToString();
+            }
+            foreach(DocsElement child in Children)
+            {
+                stringBuilder.Append(child.ToString());
+            }
+
+            return stringBuilder.ToString();
+        }
     }
 }

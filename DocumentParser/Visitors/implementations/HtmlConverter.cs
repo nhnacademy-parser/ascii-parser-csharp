@@ -1,80 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DocumentParser.Domain.Html;
 using DocumentParser.Elements.Implementations;
 
 namespace DocumentParser.Visitors.implementations
 {
     public class HtmlConverter : IDocumentVisitor
     {
-        private const char LineBreak = '\n';
-        private const char DoubleQuotes = '\"';
-
-
-        private readonly List<FootNoteElement> FootNoteElements = new List<FootNoteElement>();
+        private readonly List<FootNoteElement> _footNoteElements = new List<FootNoteElement>();
 
         public string Visit(DocsElement element)
         {
-            StringBuilder stringBuilder = new StringBuilder();
-
-
-            if (element != null)
-            {
-                if (element.Value != null)
-                {
-                    stringBuilder.Append(Visit(element.Value));
-                }
-
-                if (element.Children != null)
-                {
-                    foreach (DocsElement child in element.Children)
-                    {
-                        stringBuilder.Append(LineBreak).Append(child.Accept(this));
-                    }
-                }
-            }
-
-            return stringBuilder.ToString();
+            return element.ToString();
         }
 
         public string Visit(AnchorElement element)
         {
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append("<a href=").Append(DoubleQuotes).Append(element.Href).Append(DoubleQuotes)
-                .Append(">");
-            builder.Append(element.AltText);
-
-            builder.Append("</a>");
-
-            return builder.ToString();
-        }
-
-        public string Visit(AttributeElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append(" ");
-            foreach (KeyValuePair<string, string> keyValuePair in element)
-            {
-                builder.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append(" ");
-            }
-
-            return builder.ToString();
+            return HtmlTag.TagBlock("a", element.AltText, "href", element.Href);
         }
 
         public string Visit(BoldTextElement element)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<strong>").Append(element.BoldText).Append("</strong>");
+            builder.Append(HtmlTag.TagBlock("strong", element.BoldText));
 
             if (element.Next != null)
             {
                 builder.Append(element.Next.Accept(this));
             }
 
-            
             return builder.ToString();
         }
 
@@ -85,14 +41,7 @@ namespace DocumentParser.Visitors.implementations
 
         public string Visit(CrossReferenceElement element)
         {
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append("<a href=").Append(DoubleQuotes).Append("#").Append(element.RefTarget).Append(DoubleQuotes)
-                .Append(">");
-            builder.Append(element.AltText);
-            builder.Append("</a>");
-
-            return builder.ToString();
+            return HtmlTag.TagBlock("a", element.AltText, "href", "#" + element.RefTarget);
         }
 
 
@@ -100,237 +49,192 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<div>");
-
             foreach (DocsElement child in element.Children)
             {
-                builder.Append("<p>");
-                builder.Append(child.Value);
-                builder.Append("</p>");
+                builder.Append(HtmlTag.TagBlock("p", child.Accept(this).ToString()));
             }
 
-            builder.Append("</div>");
-            return builder.ToString();
+            return HtmlTag.TagBlock("div", builder.ToString());
         }
 
         public string Visit(FootNoteElement element)
         {
-            FootNoteElements.Add(element);
+            _footNoteElements.Add(element);
             StringBuilder builder = new StringBuilder();
 
+            String footnoteId = "_footnoteref_" + _footNoteElements.Count;
 
-            String footnoteId = "_footnoteref_" + FootNoteElements.Count;
+            builder.Append("[")
+                .Append(HtmlTag.TagBlock("a", _footNoteElements.Count.ToString(),
+                    new KeyValuePair<string, string>("id", footnoteId),
+                    new KeyValuePair<string, string>("class", "footnote"),
+                    new KeyValuePair<string, string>("href", "#" + footnoteId)))
+                .Append("]");
 
-            builder.Append("<sup class=").Append(DoubleQuotes).Append("footnote").Append(DoubleQuotes).Append(">")
-                .Append("[")
-                .Append("<a ")
-                .Append("id=").Append(DoubleQuotes).Append(footnoteId).Append(DoubleQuotes)
-                .Append("class=").Append(DoubleQuotes).Append("footnote").Append(DoubleQuotes)
-                .Append("href=").Append(DoubleQuotes).Append("#").Append(footnoteId).Append(DoubleQuotes)
-                .Append(">")
-                .Append(FootNoteElements.Count)
-                .Append("</a>")
-                .Append("]")
-                .Append("</sup>");
-
-            return builder.ToString();
+            return HtmlTag.TagBlock("sup", builder.ToString(), "class", "footnote");
         }
 
         public string Visit(HeadingElement element)
         {
-            StringBuilder builder = new StringBuilder();
             string tag = "h" + element.Level;
             string id = element.Heading.Replace(" ", "_").ToLower();
-            builder.Append("<").Append(tag)
-                .Append(" id=").Append(DoubleQuotes).Append(id).Append(DoubleQuotes).Append(">")
-                .Append(element.Heading)
-                .Append("</").Append(tag).Append(">");
 
-            return builder.ToString();
+            return HtmlTag.TagBlock(tag, element.Heading, "id", id);
         }
 
         public string Visit(ImageElement element)
         {
-            return "<img class=image src=" + DoubleQuotes + element.Href + DoubleQuotes + " alt=" +
-                   DoubleQuotes + element.AltText + DoubleQuotes + "/>";
+            return HtmlTag.TagBlock("img", element.AltText,
+                new KeyValuePair<string, string>("src", element.Href),
+                new KeyValuePair<string, string>("alt", element.AltText)
+            );
         }
 
         public string Visit(ItalicTextElement element)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<em>").Append(element.ItalicText).Append("</em>");
-
-
             if (element.Next != null)
             {
                 builder.Append(element.Next.Accept(this));
             }
 
-            return builder.ToString();
+            return HtmlTag.TagBlock("em", element.ItalicText) + builder;
         }
 
         public string Visit(ListingBlockElement element)
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append("<div>");
 
             foreach (DocsElement child in element.Children)
             {
-                builder.Append("<pre>");
-
-                builder.Append(child.Value);
-                builder.Append("</pre>");
+                if (child is InlineElement { Value: DocsElement inlineElement })
+                {
+                    builder.Append(inlineElement.Accept(this)).Append('\n');
+                }
+                else
+                {
+                    builder.Append(child.Accept(this)).Append('\n');
+                }
             }
 
-            builder.Append("</div>");
-
-
-            return builder.ToString();
+            return
+                HtmlTag.TagBlock("div",
+                    HtmlTag.TagBlock("pre", builder.ToString())
+                );
         }
 
         public string Visit(InlineElement element)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<p>");
-
             if (element.Value is DocsElement child)
             {
                 builder.Append(child.Accept(this));
             }
 
-            builder.Append("</p>");
-
-            return builder.ToString();
+            return HtmlTag.TagBlock("p", builder.ToString());
         }
 
         public string Visit(OrderedListElement element)
         {
             StringBuilder builder = new StringBuilder();
-
-            builder.Append("<ol>");
-
-            builder.Append("<ul>").Append(LineBreak);
-
-            builder.Append("<li>").Append(LineBreak);
             builder.Append(element.Value);
+
             foreach (DocsElement docs in element.Children)
             {
                 builder.Append(docs.Accept(this));
             }
 
-            builder.Append("</li>").Append(LineBreak);
-
-            builder.Append("</ol>").Append(LineBreak);
-
-            return builder.ToString();
+            return
+                HtmlTag.TagBlock("ol",
+                    HtmlTag.TagBlock("li", builder.ToString()));
         }
 
         public string Visit(QuotationElement element)
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<blockquote>").Append(LineBreak);
-            builder.Append("<div class=" + DoubleQuotes + "paragraph\">").Append(LineBreak);
-            builder.Append("<p>");
             foreach (DocsElement child in element.Children)
             {
                 builder.Append(child.Value);
             }
 
-            builder.Append("</p>").Append(LineBreak);
-            builder.Append("</div>").Append(LineBreak);
-            builder.Append("</blockquote>").Append(LineBreak);
-            //builder.Append(Visit(element.AttributeElement));
-            return builder.ToString();
+            return
+                HtmlTag.TagBlock("blockquote",
+                    HtmlTag.TagBlock("div",
+                        HtmlTag.TagBlock("p", builder.ToString()), "class", "paragraph"));
         }
 
         public string Visit(SideBarElement element)
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append("<div class=").Append(DoubleQuotes).Append("side-bar").Append(DoubleQuotes).Append(">");
 
             foreach (DocsElement child in element.Children)
             {
-                builder.Append("<pre>");
-                builder.Append(child.Value);
-                builder.Append("</pre>");
+                builder.Append(HtmlTag.TagBlock("p", child.Value.ToString()));
             }
 
-            builder.Append("</div>");
 
-
-            return builder.ToString();
+            return HtmlTag.TagBlock("div", builder.ToString(), "class", "side-bar");
         }
 
         public string Visit(TableElement element)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder table = new StringBuilder();
 
-            builder.Append("<table>").Append(LineBreak);
+
+            StringBuilder columnHeading = new StringBuilder();
+            foreach (String heading in element.ColumnHeading)
             {
-                builder.Append("<thead>").Append(LineBreak);
-                builder.Append("<tr>").Append(LineBreak);
-
-
-                foreach (String columnHeading in element.ColumnHeading)
-                {
-                    builder.Append("<th>").Append(columnHeading).Append("</th>").Append(LineBreak);
-                }
-
-                builder.Append("</tr>").Append(LineBreak);
-                builder.Append("</thead>").Append(LineBreak);
-            }
-            {
-                builder.Append("<tbody>").Append(LineBreak);
-                foreach (String[] row in element.Rows)
-                {
-                    builder.Append("<tr>").Append(LineBreak);
-                    foreach (String column in row)
-                    {
-                        builder.Append("<td>").Append(column).Append("</td>").Append(LineBreak);
-                    }
-
-                    builder.Append("</tr>").Append(LineBreak);
-                }
-
-                builder.Append("</tbody>").Append(LineBreak);
+                columnHeading.Append(HtmlTag.TagBlock("th", heading));
             }
 
-            builder.Append("</table>").Append(LineBreak);
+            table.Append(
+                HtmlTag.TagBlock("thead",
+                    HtmlTag.TagBlock("tr", columnHeading.ToString()))
+            );
 
-            return builder.ToString();
+
+            StringBuilder tr = new StringBuilder();
+
+            foreach (String[] row in element.Rows)
+            {
+                StringBuilder td = new StringBuilder();
+                foreach (String column in row)
+                {
+                    td.Append(HtmlTag.TagBlock("td", column));
+                }
+
+                tr.Append(HtmlTag.TagBlock("tr", td.ToString()));
+            }
+
+            table.Append(
+                HtmlTag.TagBlock("tbody",
+                    HtmlTag.TagBlock("tr", tr.ToString()))
+            );
+
+            return HtmlTag.TagBlock("table", table.ToString());
         }
 
         public string Visit(TitleElement element)
         {
-            return "<div class=" + DoubleQuotes + "title\">" + element.Title + "</div>";
+            return HtmlTag.TagBlock("div", element.Title, "class", "title");
         }
 
         public string Visit(UnOrderedListElement element)
         {
             StringBuilder builder = new StringBuilder();
-
-            builder.Append("<ul>").Append(LineBreak);
-
-            builder.Append("<li>").Append(LineBreak);
             builder.Append(element.Value);
+
             foreach (DocsElement docs in element.Children)
             {
                 builder.Append(docs.Accept(this));
             }
 
-            builder.Append("</li>").Append(LineBreak);
-
-            builder.Append("</ul>").Append(LineBreak);
-
-            return builder.ToString();
-        }
-
-        public string Visit(string s)
-        {
-            return "<p>" + s + "</p>";
+            return
+                HtmlTag.TagBlock("ul",
+                    HtmlTag.TagBlock("li", builder.ToString()));
         }
 
         public string Visit(PlainTextElement element)
@@ -345,11 +249,6 @@ namespace DocumentParser.Visitors.implementations
             }
 
             return builder.ToString();
-        }
-
-        public string Visit(object s)
-        {
-            return s.ToString();
         }
     }
 }

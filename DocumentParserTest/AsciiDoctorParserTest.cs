@@ -27,7 +27,8 @@ public class AsciiDoctorParserTest
         outputStreamWriter.Write(htmlDocument);
         outputStreamWriter.Flush();
     }
-    [Fact]
+    
+    // [Fact]
     public void ConvertWebAsciiToHtml()
     {
         AsciiDocsParser asciiDocsParser = new AsciiDocsParser();

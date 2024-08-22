@@ -197,7 +197,7 @@ namespace DocumentParser.Parsers.Implementations
                 }
                 else if (type == typeof(TableElement))
                 {
-                    return new TableElement("");
+                    return new TableElement(context);
                 }
                 else if (type == typeof(AttributeElement))
                 {

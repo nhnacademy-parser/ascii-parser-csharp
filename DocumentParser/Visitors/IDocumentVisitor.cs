@@ -6,7 +6,7 @@ namespace DocumentParser.Visitors
     {
         string Visit(AnchorElement element);
 
-        string Visit(AttributeElement element);
+        // string Visit(AttributeElement element);
 
         string Visit(BoldTextElement element);
 

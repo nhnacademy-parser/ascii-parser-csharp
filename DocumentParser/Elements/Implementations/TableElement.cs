@@ -6,8 +6,9 @@ namespace DocumentParser.Elements.Implementations
 {
     public class TableElement : DocsElement
     {
-        public TableElement() : base()
+        public TableElement(object value) : base(value)
         {
+            InitContainer();
             ColumnHeading = new List<string>();
             Rows = new List<string[]>();
         }
@@ -20,18 +21,6 @@ namespace DocumentParser.Elements.Implementations
         {
             return visitor.Visit(this);
         }
-
-        //public void AddChild (string column)
-        //{
-
-        //    if (Rows.Count <= 0)
-        //    {
-        //        if(column == "\n")
-        //        {
-        //            Rows.Add(new string[ColumnHeading.Count]);
-        //        }
-        //    }
-
-        //}
+        
     }
 }

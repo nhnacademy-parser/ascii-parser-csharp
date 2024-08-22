@@ -8,10 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public string BoldText
-        {
-            get { return ValueString; }
-        }
+        public string BoldText => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

@@ -4,23 +4,20 @@ namespace DocumentParser.Elements.Implementations
 {
     public class AnchorElement : DocsElement
     {
-
-        public AnchorElement(string href): base(href)
+        public AnchorElement(string href) : base(href)
         {
             AltText = href;
         }
 
         public AnchorElement(string href, string altText) : this(href)
         {
-            AltText = altText;
+            AltText = string.IsNullOrWhiteSpace(altText) ? href : altText;
         }
 
         public string AltText { get; }
 
-        public string Href
-        {
-            get { return Value.ToString(); }
-        }
+        public string Href => Value.ToString();
+
 
         public override object Accept(IDocumentVisitor visitor)
         {

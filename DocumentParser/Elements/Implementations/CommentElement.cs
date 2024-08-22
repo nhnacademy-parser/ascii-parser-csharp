@@ -8,10 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public string Comment
-        {
-            get { return Value.ToString(); }
-        }
+        public string Comment => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

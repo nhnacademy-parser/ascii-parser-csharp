@@ -2,9 +2,9 @@
 
 namespace DocumentParser.Elements.Implementations
 {
-    public class IdAttributeElement : DocsElement
+    public class InlineElement : DocsElement
     {
-        public IdAttributeElement(object value) : base(value)
+        public InlineElement(object value) : base(value)
         {
         }
 

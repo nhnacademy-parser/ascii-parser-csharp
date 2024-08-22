@@ -17,10 +17,7 @@ namespace DocumentParser.Elements.Implementations
 
         public string AltText { get; }
 
-        public string Href
-        {
-            get { return Value.ToString(); }
-        }
+        public string Href => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

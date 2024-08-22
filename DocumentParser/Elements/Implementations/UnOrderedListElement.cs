@@ -3,13 +3,14 @@ using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations
 {
-    public class UnOrderedListElement:DocsElement
+    public class UnOrderedListElement : DocsElement
 
     {
-        public UnOrderedListElement(object value) : base()
+        public UnOrderedListElement(object value) : base(value)
         {
             Value = value;
             Level = 1;
+            InitContainer();
         }
 
         public UnOrderedListElement(object value, int level) : this(value)
@@ -22,18 +23,6 @@ namespace DocumentParser.Elements.Implementations
         public override object Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);
-        }
-
-        public override bool EndOfContaier(DocsElement element)
-        {
-            if(element is UnOrderedListElement ul)
-            {
-                return ul.Level <= Level;
-            }
-            else
-            {
-                return string.IsNullOrWhiteSpace(element.Value.ToString());
-            }
         }
     }
 }

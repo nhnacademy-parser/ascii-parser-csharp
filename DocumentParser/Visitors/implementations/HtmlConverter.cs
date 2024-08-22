@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using DocumentParser.Elements.Implementations;
 
@@ -8,8 +7,8 @@ namespace DocumentParser.Visitors.implementations
 {
     public class HtmlConverter : IDocumentVisitor
     {
-        public const char LINE_BREAK = '\n';
-        public const char DOUBLE_QUOTES = '\"';
+        private const char LineBreak = '\n';
+        private const char DoubleQuotes = '\"';
 
 
         private readonly List<FootNoteElement> FootNoteElements = new List<FootNoteElement>();
@@ -30,7 +29,7 @@ namespace DocumentParser.Visitors.implementations
                 {
                     foreach (DocsElement child in element.Children)
                     {
-                        stringBuilder.Append(LINE_BREAK).Append(child.Accept(this));
+                        stringBuilder.Append(LineBreak).Append(child.Accept(this));
                     }
                 }
             }
@@ -42,10 +41,10 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<a href=").Append(DOUBLE_QUOTES).Append(element.Href).Append(DOUBLE_QUOTES)
-                    .Append(">");
+            builder.Append("<a href=").Append(DoubleQuotes).Append(element.Href).Append(DoubleQuotes)
+                .Append(">");
             builder.Append(element.AltText);
-            
+
             builder.Append("</a>");
 
             return builder.ToString();
@@ -55,10 +54,12 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<div class=" + DOUBLE_QUOTES + "attribution\">").Append(LINE_BREAK);
-            builder.Append("&#8212; ").Append(element.By).Append("<br>").Append(LINE_BREAK);
-            builder.Append("<cite>").Append(element.From).Append("</cite>").Append(LINE_BREAK);
-            builder.Append("</div>").Append(LINE_BREAK);
+            builder.Append(" ");
+            foreach (KeyValuePair<string, string> keyValuePair in element)
+            {
+                builder.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append(" ");
+            }
+
             return builder.ToString();
         }
 
@@ -73,6 +74,7 @@ namespace DocumentParser.Visitors.implementations
                 builder.Append(element.Next.Accept(this));
             }
 
+            
             return builder.ToString();
         }
 
@@ -85,8 +87,8 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<a href=").Append(DOUBLE_QUOTES).Append("#").Append(element.RefTarget).Append(DOUBLE_QUOTES)
-                    .Append(">");
+            builder.Append("<a href=").Append(DoubleQuotes).Append("#").Append(element.RefTarget).Append(DoubleQuotes)
+                .Append(">");
             builder.Append(element.AltText);
             builder.Append("</a>");
 
@@ -103,9 +105,8 @@ namespace DocumentParser.Visitors.implementations
             foreach (DocsElement child in element.Children)
             {
                 builder.Append("<p>");
-                builder.Append(child.ValueString);
+                builder.Append(child.Value);
                 builder.Append("</p>");
-
             }
 
             builder.Append("</div>");
@@ -120,17 +121,17 @@ namespace DocumentParser.Visitors.implementations
 
             String footnoteId = "_footnoteref_" + FootNoteElements.Count;
 
-            builder.Append("<sup class=").Append(DOUBLE_QUOTES).Append("footnote").Append(DOUBLE_QUOTES).Append(">")
-                    .Append("[")
-                    .Append("<a ")
-                    .Append("id=").Append(DOUBLE_QUOTES).Append(footnoteId).Append(DOUBLE_QUOTES)
-                    .Append("class=").Append(DOUBLE_QUOTES).Append("footnote").Append(DOUBLE_QUOTES)
-                    .Append("href=").Append(DOUBLE_QUOTES).Append("#").Append(footnoteId).Append(DOUBLE_QUOTES)
-                    .Append(">")
-                    .Append(FootNoteElements.Count)
-                    .Append("</a>")
-                    .Append("]")
-                    .Append("</sup>");
+            builder.Append("<sup class=").Append(DoubleQuotes).Append("footnote").Append(DoubleQuotes).Append(">")
+                .Append("[")
+                .Append("<a ")
+                .Append("id=").Append(DoubleQuotes).Append(footnoteId).Append(DoubleQuotes)
+                .Append("class=").Append(DoubleQuotes).Append("footnote").Append(DoubleQuotes)
+                .Append("href=").Append(DoubleQuotes).Append("#").Append(footnoteId).Append(DoubleQuotes)
+                .Append(">")
+                .Append(FootNoteElements.Count)
+                .Append("</a>")
+                .Append("]")
+                .Append("</sup>");
 
             return builder.ToString();
         }
@@ -141,22 +142,21 @@ namespace DocumentParser.Visitors.implementations
             string tag = "h" + element.Level;
             string id = element.Heading.Replace(" ", "_").ToLower();
             builder.Append("<").Append(tag)
-                    .Append(" id=").Append(DOUBLE_QUOTES).Append(id).Append(DOUBLE_QUOTES).Append(">")
-                    .Append(element.Heading)
-                    .Append("</").Append(tag).Append(">");
+                .Append(" id=").Append(DoubleQuotes).Append(id).Append(DoubleQuotes).Append(">")
+                .Append(element.Heading)
+                .Append("</").Append(tag).Append(">");
 
             return builder.ToString();
         }
 
         public string Visit(ImageElement element)
         {
-            return "<img class=image src=" + DOUBLE_QUOTES + element.Href + DOUBLE_QUOTES + " alt=" +
-                    DOUBLE_QUOTES + element.AltText + DOUBLE_QUOTES + "/>";
+            return "<img class=image src=" + DoubleQuotes + element.Href + DoubleQuotes + " alt=" +
+                   DoubleQuotes + element.AltText + DoubleQuotes + "/>";
         }
 
         public string Visit(ItalicTextElement element)
         {
-
             StringBuilder builder = new StringBuilder();
 
             builder.Append("<em>").Append(element.ItalicText).Append("</em>");
@@ -170,27 +170,17 @@ namespace DocumentParser.Visitors.implementations
             return builder.ToString();
         }
 
-        public string Visit(IdAttributeElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append("<div id=").Append(DOUBLE_QUOTES).Append(element.ValueString).Append(DOUBLE_QUOTES).Append(">");
-            builder.Append("</div>");
-            return builder.ToString();
-        }
-
         public string Visit(ListingBlockElement element)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append("<div>");
 
-            foreach(DocsElement child in element.Children)
+            foreach (DocsElement child in element.Children)
             {
                 builder.Append("<pre>");
 
-                builder.Append(child.ValueString);
+                builder.Append(child.Value);
                 builder.Append("</pre>");
-
             }
 
             builder.Append("</div>");
@@ -199,39 +189,40 @@ namespace DocumentParser.Visitors.implementations
             return builder.ToString();
         }
 
-        public string Visit(LineElement element)
+        public string Visit(InlineElement element)
         {
-
             StringBuilder builder = new StringBuilder();
 
-            builder.Append(element.Value);
+            builder.Append("<p>");
 
-            if(element.Next != null)
+            if (element.Value is DocsElement child)
             {
-                builder.Append(element.Next.Accept(this));
+                builder.Append(child.Accept(this));
             }
+
+            builder.Append("</p>");
 
             return builder.ToString();
         }
 
         public string Visit(OrderedListElement element)
         {
-
             StringBuilder builder = new StringBuilder();
 
             builder.Append("<ol>");
 
-            builder.Append("<ul>").Append(LINE_BREAK);
+            builder.Append("<ul>").Append(LineBreak);
 
-            builder.Append("<li>").Append(LINE_BREAK);
-            builder.Append(element.ValueString);
+            builder.Append("<li>").Append(LineBreak);
+            builder.Append(element.Value);
             foreach (DocsElement docs in element.Children)
             {
                 builder.Append(docs.Accept(this));
             }
-            builder.Append("</li>").Append(LINE_BREAK);
 
-            builder.Append("</ol>").Append(LINE_BREAK);
+            builder.Append("</li>").Append(LineBreak);
+
+            builder.Append("</ol>").Append(LineBreak);
 
             return builder.ToString();
         }
@@ -240,32 +231,31 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<blockquote>").Append(LINE_BREAK);
-            builder.Append("<div class=" + DOUBLE_QUOTES + "paragraph\">").Append(LINE_BREAK);
+            builder.Append("<blockquote>").Append(LineBreak);
+            builder.Append("<div class=" + DoubleQuotes + "paragraph\">").Append(LineBreak);
             builder.Append("<p>");
             foreach (DocsElement child in element.Children)
             {
-                builder.Append(child.ValueString);
+                builder.Append(child.Value);
             }
-            builder.Append("</p>").Append(LINE_BREAK);
-            builder.Append("</div>").Append(LINE_BREAK);
-            builder.Append("</blockquote>").Append(LINE_BREAK);
+
+            builder.Append("</p>").Append(LineBreak);
+            builder.Append("</div>").Append(LineBreak);
+            builder.Append("</blockquote>").Append(LineBreak);
             //builder.Append(Visit(element.AttributeElement));
             return builder.ToString();
         }
 
         public string Visit(SideBarElement element)
         {
-
             StringBuilder builder = new StringBuilder();
-            builder.Append("<div class=").Append(DOUBLE_QUOTES).Append("side-bar").Append(DOUBLE_QUOTES).Append(">");
+            builder.Append("<div class=").Append(DoubleQuotes).Append("side-bar").Append(DoubleQuotes).Append(">");
 
-            foreach(DocsElement child in element.Children)
+            foreach (DocsElement child in element.Children)
             {
                 builder.Append("<pre>");
-                builder.Append(child.ValueString);
+                builder.Append(child.Value);
                 builder.Append("</pre>");
-
             }
 
             builder.Append("</div>");
@@ -278,59 +268,62 @@ namespace DocumentParser.Visitors.implementations
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<table>").Append(LINE_BREAK);
+            builder.Append("<table>").Append(LineBreak);
             {
-                builder.Append("<thead>").Append(LINE_BREAK);
-                builder.Append("<tr>").Append(LINE_BREAK);
+                builder.Append("<thead>").Append(LineBreak);
+                builder.Append("<tr>").Append(LineBreak);
 
-                
+
                 foreach (String columnHeading in element.ColumnHeading)
                 {
-                    builder.Append("<th>").Append(columnHeading).Append("</th>").Append(LINE_BREAK);
+                    builder.Append("<th>").Append(columnHeading).Append("</th>").Append(LineBreak);
                 }
-                builder.Append("</tr>").Append(LINE_BREAK);
-                builder.Append("</thead>").Append(LINE_BREAK);
+
+                builder.Append("</tr>").Append(LineBreak);
+                builder.Append("</thead>").Append(LineBreak);
             }
             {
-                builder.Append("<tbody>").Append(LINE_BREAK);
+                builder.Append("<tbody>").Append(LineBreak);
                 foreach (String[] row in element.Rows)
                 {
-                    builder.Append("<tr>").Append(LINE_BREAK);
+                    builder.Append("<tr>").Append(LineBreak);
                     foreach (String column in row)
                     {
-                        builder.Append("<td>").Append(column).Append("</td>").Append(LINE_BREAK);
+                        builder.Append("<td>").Append(column).Append("</td>").Append(LineBreak);
                     }
-                    builder.Append("</tr>").Append(LINE_BREAK);
+
+                    builder.Append("</tr>").Append(LineBreak);
                 }
-                builder.Append("</tbody>").Append(LINE_BREAK);
+
+                builder.Append("</tbody>").Append(LineBreak);
             }
 
-            builder.Append("</table>").Append(LINE_BREAK);
+            builder.Append("</table>").Append(LineBreak);
 
             return builder.ToString();
         }
 
         public string Visit(TitleElement element)
         {
-            return "<div class=" + DOUBLE_QUOTES + "title\">" + element.Title + "</div>";
+            return "<div class=" + DoubleQuotes + "title\">" + element.Title + "</div>";
         }
 
         public string Visit(UnOrderedListElement element)
         {
-
             StringBuilder builder = new StringBuilder();
 
-            builder.Append("<ul>").Append(LINE_BREAK);
+            builder.Append("<ul>").Append(LineBreak);
 
-            builder.Append("<li>").Append(LINE_BREAK);
-            builder.Append(element.ValueString);
+            builder.Append("<li>").Append(LineBreak);
+            builder.Append(element.Value);
             foreach (DocsElement docs in element.Children)
-            { 
+            {
                 builder.Append(docs.Accept(this));
             }
-            builder.Append("</li>").Append(LINE_BREAK);
 
-            builder.Append("</ul>").Append(LINE_BREAK);
+            builder.Append("</li>").Append(LineBreak);
+
+            builder.Append("</ul>").Append(LineBreak);
 
             return builder.ToString();
         }
@@ -340,14 +333,23 @@ namespace DocumentParser.Visitors.implementations
             return "<p>" + s + "</p>";
         }
 
-        public string Visit(object o)
+        public string Visit(PlainTextElement element)
         {
-            if (o is DocsElement doc)
+            StringBuilder builder = new StringBuilder();
+
+            builder.Append(element.Value);
+
+            if (element.Next != null)
             {
-                return doc.Accept(this).ToString();
+                builder.Append(element.Next.Accept(this));
             }
 
-            return "<p>" + o.ToString() + "</p>";
+            return builder.ToString();
+        }
+
+        public string Visit(object s)
+        {
+            return s.ToString();
         }
     }
 }

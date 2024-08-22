@@ -1,27 +1,50 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Visitors.implementations;
 
 namespace DocumentParser.Domain
 {
-    public class Document
+    public class Document : IEnumerable<IDocumentElement>
     {
 
-        internal void AddRootElement(DocsElement headElement)
+
+        private List<IDocumentElement> _elements;
+
+        public Document()
         {
-            RootElement = headElement;
+            _elements = new List<IDocumentElement>();
         }
 
-        public DocsElement RootElement { get; set; }
-
-        public override string ToString()
+        public void Append(IDocumentElement element)
         {
-            return RootElement.ToString();
+            _elements.Add(element);
+        }
+        
+        public string Convert(HtmlConverter htmlConverter)
+        {
+            
+            StringBuilder sb = new StringBuilder();
+
+            foreach (IDocumentElement element in this)
+            {
+                sb.Append(element.Accept(htmlConverter));
+            }
+            
+            return sb.ToString();
         }
 
-        public string convert(HtmlConverter htmlConverter)
+        public IEnumerator<IDocumentElement> GetEnumerator()
         {
-            return RootElement.Accept(htmlConverter).ToString();
+            return _elements.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -1,18 +1,21 @@
-﻿
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations
 {
-    public class ListingBlockElement: DocsElement
+    public class PlainTextElement : DocsElement
     {
-        public ListingBlockElement(object value) : base(value)
+        public PlainTextElement(string value) : base(value)
         {
-            InitContainer();
         }
-        
+
         public override object Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString();
         }
     }
 }

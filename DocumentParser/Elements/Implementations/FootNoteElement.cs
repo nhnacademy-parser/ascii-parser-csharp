@@ -8,10 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public string FootNote
-        {
-            get { return Value.ToString(); }
-        }
+        public string FootNote => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

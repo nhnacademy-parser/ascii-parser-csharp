@@ -8,11 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public string ItalicText
-        {
-            get { return ValueString; }
-        }
-
+        public string ItalicText => Value.ToString();
         public override object Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);

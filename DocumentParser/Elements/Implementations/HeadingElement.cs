@@ -4,8 +4,6 @@ namespace DocumentParser.Elements.Implementations
 {
     public class HeadingElement : DocsElement
     {
-
-
         public HeadingElement(object heading) : base(heading)
         {
             Level = 1;
@@ -17,11 +15,8 @@ namespace DocumentParser.Elements.Implementations
         }
 
         public int Level { get; }
-        public string Heading
-        {
-            get { return ValueString; }
-        }
 
+        public string Heading => Value.ToString();
         public override object Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);

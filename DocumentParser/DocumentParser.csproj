@@ -9,10 +9,14 @@
     <None Remove="Parsers\" />
     <None Remove="Parsers\Implementations\" />
     <None Remove="Domain\" />
+    <None Remove="Analyzers\" />
+    <None Remove="Analyzers\Implementations\" />
+    <None Remove="DocumentSyntaxes\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Parsers\" />
     <Folder Include="Parsers\Implementations\" />
-    <Folder Include="Domain\" />
+    <Folder Include="Analyzers\" />
+    <Folder Include="Analyzers\Implementations\" />
   </ItemGroup>
 </Project>

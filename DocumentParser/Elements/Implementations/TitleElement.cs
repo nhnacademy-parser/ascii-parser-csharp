@@ -8,7 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public string Title { get { return Value.ToString(); } }
+        public string Title => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

@@ -1,20 +1,27 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using DocumentParser.Analyzers.Implementations;
+using DocumentParser.DocumentSyntaxes;
 using DocumentParser.Domain;
 using DocumentParser.Elements;
-using DocumentParser.Parsers;
 using DocumentParser.Elements.Implementations;
-using System.Text.RegularExpressions;
-using System.Text;
-using System.Collections.Generic;
 
 namespace DocumentParser.Parsers.Implementations
 {
-	public class AsciiDocsParser:IDocumentParser
-	{
-		public AsciiDocsParser()
-		{
-		}
+    public class AsciiDocsParser : IDocumentParser
+    {
+        private readonly AsciiDocsAnalyzer _analyzer;
+
+        public AsciiDocsParser()
+        {
+            _analyzer = new AsciiDocsAnalyzer();
+            _analyzer.Init();
+        }
 
         public Document LoadFile(string filePath)
         {
@@ -23,292 +30,338 @@ namespace DocumentParser.Parsers.Implementations
 
         public Document LoadFile(FileStream file)
         {
-            Document document = new Document();
-
-            DocsElement headElement = new DocsElement();
-            document.AddRootElement(headElement);
-
+            List<DocsElement> documentElements = new List<DocsElement>();
             StreamReader inputStreamReader = new StreamReader(file);
 
-            while(!inputStreamReader.EndOfStream)
-            { 
+            while (!inputStreamReader.EndOfStream)
+            {
                 string str = inputStreamReader.ReadLine();
 
-                DocsElement element = Parse(str);
+                DocsElement element = Parse(str) as DocsElement;
 
-                bool flag = false;
-                for (; headElement.EndOfContaier(element); headElement = headElement.Parent)
+                documentElements.Add(element);
+            }
+
+            return Assemble(documentElements);
+        }
+
+        private Document Assemble(List<DocsElement> docsElements)
+        {
+            Document document = new Document();
+
+            DocsElement head = null;
+
+            Cartridge<AttributeElement> attributeElement = new Cartridge<AttributeElement>();
+            foreach (DocsElement docsElement in docsElements)
+            {
+                Cartridge<DocsElement> element = new Cartridge<DocsElement>();
+                element.TryAdd(docsElement);
+
+                if (docsElement is AttributeElement)
                 {
-                    flag = true;
+                    try
+                    {
+                        document.Append(attributeElement.TryRemove());
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    attributeElement.TryAdd(element.TryRemove() as AttributeElement);
                 }
-
-                headElement.AddChild(element);
-
-                if (flag)
+                else
                 {
-                    continue;
-                }
+                    try
+                    {
+                        docsElement.AddAttribute(attributeElement.TryRemove());
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e);
+                    }
 
+                    try
+                    {
+                        while (head != null)
+                        {
+                            bool flag = false;
 
-                if (element.IsContainer)
-                { 
-                    element.Parent = headElement;
-                    headElement = element;
+                            try
+                            {
+                                flag = EndOfContainer(head, docsElement);
+                            }
+                            catch (ContainerCloseElementException e)
+                            {
+                                Console.WriteLine(e);
+                                head = head.Parent;
+                                throw new ContainerCloseElementException();
+                            }
+
+                            if (flag)
+                            {
+                                head = head.Parent;
+                            }
+                            else
+                            {
+                                head.AddChild(element.TryRemove());
+                                break;
+                            }
+                        }
+                    }
+                    catch (ContainerCloseElementException e)
+                    {
+                        Console.WriteLine(e);
+                        continue;
+                    }
+
+                    if (docsElement.IsContainer)
+                    {
+                        docsElement.Parent = head;
+                        head = docsElement;
+                    }
+
+                    try
+                    {
+                        document.Append(element.TryRemove());
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
             }
 
             return document;
         }
 
-        public DocsElement Parse(string document)
+        public IDocumentElement Parse(string context)
         {
-
-            if (document.StartsWith("="))
-            {    //heading or Example Block
-
-                string exampleBlockstring = "====$";
-                Match match = Regex.Match(document, exampleBlockstring);
-
-                if (match.Success)
-                {
-                    return new ExampleBlockElement(document);
-                }
-                else
-                {
-                    Regex regex = new Regex("=");
-                    return new HeadingElement(Parse(regex.Replace(document, (match) => "")), regex.Matches(document).Count);
-                }
+            if (string.IsNullOrWhiteSpace(context))
+            {
+                return new PlainTextElement("");
             }
-            else if (document.StartsWith("."))
-            {// title or orderList
 
-                Regex titleRegex = new Regex("^\\.[^ .]");
-                Match match = titleRegex.Match(document);
+            IDocumentSyntax syntax = _analyzer.Analyze(context);
 
-                if (match.Success)
-                { // title
-                    return new TitleElement(document[1..]);
-                }
-                else
+            if (syntax is AsciiDocSyntax asciiDocSyntax)
+            {
+                Type type = asciiDocSyntax.InstanceType;
+                Regex pattern = asciiDocSyntax.Pattern;
+
+                if (type == typeof(HeadingElement))
                 {
-                    Regex orderListRegex = new Regex("\\.");
-
-                    return new OrderedListElement(Parse(orderListRegex.Replace(document, (match) => "")), orderListRegex.Matches(document).Count);
+                    return new HeadingElement(ParseLine(pattern.Replace(context, (match) => "")),
+                        pattern.Matches(context).Count);
                 }
-            }
-            else if (document.StartsWith("*"))
-            { // orderList or sideBar
-
-                Regex sideBarRegex = new Regex("\\*\\*\\*\\*$");
-                Match match = sideBarRegex.Match(document);
-
-                if (match.Success)
-                { // sideBar
-                    return new SideBarElement(document);
-                }
-                else
-                { // unordered List
-                    Regex regex = new Regex("\\*");
-                    return new UnOrderedListElement(Parse(regex.Replace(document, (match) => "")), regex.Matches(document).Count);
-                }
-
-            }
-            else if (document.StartsWith("-"))
-            {// unorderedList(st. Markdown) , listing Block
-
-                Regex listingBlockRegex = new Regex("----$");
-                Match match = listingBlockRegex.Match(document);
-
-                if (match.Success)
-                { // listing Block
-                    return new ListingBlockElement();
-                }
-                else
-                {  // unorderedList(st. Markdown)
-                    Regex regex = new Regex("-");
-                    return new UnOrderedListElement(Parse(regex.Replace(document, (match) => "")), regex.Matches(document).Count);
-                }
-
-            }
-            else if (document.StartsWith("image::"))
-            { // image
-
-                Regex imageRefRegex = new Regex("^image::");
-                Match match = imageRefRegex.Match(document);
-
-                if (match.Success)
+                else if (type == typeof(ExampleBlockElement))
                 {
-                    String temp = imageRefRegex.Replace(document, "");
+                    return new ExampleBlockElement(context);
+                }
+                else if (type == typeof(TitleElement))
+                {
+                    return new TitleElement(context[1..]);
+                }
+                else if (type == typeof(OrderedListElement))
+                {
+                    return new OrderedListElement(ParseLine(pattern.Replace(context, match => "")),
+                        pattern.Matches(context).Count);
+                }
+                else if (type == typeof(UnOrderedListElement))
+                {
+                    return new UnOrderedListElement(ParseLine(pattern.Replace(context, match => "")),
+                        pattern.Matches(context).Count);
+                }
+                else if (type == typeof(SideBarElement))
+                {
+                    return new SideBarElement(ParseLine(pattern.Replace(context, match => "")));
+                }
+                else if (type == typeof(ListingBlockElement))
+                {
+                    return new ListingBlockElement(ParseLine(pattern.Replace(context, match => "")));
+                }
+                else if (type == typeof(ImageElement))
+                {
+                    String href = pattern.Replace(context, "");
 
                     Regex altTextRegex = new Regex("\\[.+]");
-                    match = altTextRegex.Match(temp);
+                    Match match = altTextRegex.Match(href);
 
                     if (match.Success)
                     {
                         String alt = match.Value;
 
-                        temp = altTextRegex.Replace(temp, "");
-                        return new ImageElement(temp, alt.Substring(1, alt.Length - 2));
+                        href = altTextRegex.Replace(href, "");
+                        return new ImageElement(href, alt.Substring(1, alt.Length - 2));
                     }
                 }
-            }
-            else if (document.StartsWith("|==="))
-            {
-
-                Regex tableRegex = new Regex("\\|===$");
-                Match match = tableRegex.Match(document);
-
-                if (match.Success)
+                else if (type == typeof(TableElement))
                 {
-                    return new TableElement() ;
+                    return new TableElement("");
                 }
-
-            }
-            else if (document.StartsWith("["))
-            { // Quotation Attribute
-                Regex attributeRegex = new Regex("\\[.+]$");
-                Match match = attributeRegex.Match(document);
-
-                if (match.Success)
+                else if (type == typeof(AttributeElement))
                 {
-                    string attributes = match.Value;
-                    string[] temp = new String[3];
-                    string[] copy = attributes.Substring(1, attributes.Length - 2).Split(",");
+                    // Quotation Attribute
+                    Regex attributeRegex = new Regex("\\[.+]$");
+                    Match match = attributeRegex.Match(context);
 
-                    Array.Copy(copy, 0, temp, 0, Math.Min(copy.Length, 3));
-
-                    Regex regex = new Regex("^#");
-                    Match match1 = regex.Match(temp[0]);
-
-                    if (match1.Success)
+                    if (match.Success)
                     {
-                        // Attribute 에 대한 재정의 필요
-                        return new IdAttributeElement(regex.Replace(temp[0],"").Replace("- ","_"));
+                        string attributes = match.Value;
+                        string[] temp = new string[3];
+                        string[] copy = attributes.Substring(1, attributes.Length - 2).Split(",");
+
+                        Array.Copy(copy, 0, temp, 0, Math.Min(copy.Length, 3));
+
+                        Regex regex = new Regex("^#");
+                        Match match1 = regex.Match(temp[0]);
+
+                        if (match1.Success)
+                        {
+                            // Attribute 에 대한 재정의 필요
+                            return new AttributeElement();
+                        }
+
+                        return new AttributeElement();
+                    }
+                }
+                else if (type == typeof(QuotationElement))
+                {
+                    return new QuotationElement(ParseLine(pattern.Replace(context, match => "")));
+                }
+                else if (type == typeof(CommentElement))
+                {
+                    return new CommentElement(pattern.Replace(context, ""));
+                }
+                else if (type == typeof(VariableElement))
+                {
+                }
+            }
+
+            return new InlineElement(ParseLine(context));
+        }
+
+        private IDocumentElement ParseLine(string context)
+        {
+            if (string.IsNullOrWhiteSpace(context))
+            {
+                return new PlainTextElement("");
+            }
+
+            IDocumentSyntax syntax = _analyzer.Analyze(context);
+
+            if (syntax is AsciiDocSyntax asciiDocSyntax)
+            {
+                Type type = asciiDocSyntax.InstanceType;
+                Regex pattern = asciiDocSyntax.Pattern;
+                Match match = pattern.Match(context);
+
+                if (Equals(type, typeof(CrossReferenceElement)))
+                {
+                    if (match.Success)
+                    {
+                        string temp = new Regex("[<>]").Replace(match.Value, "");
+                        string[] strings = temp.Split(",");
+
+
+                        IDocumentElement pre = ParseLine(context[..match.Index]);
+                        IDocumentElement mid = new CrossReferenceElement(strings[0], strings[1]);
+                        IDocumentElement post = ParseLine(context[(match.Index + match.Length)..]);
+
+                        pre.Append(mid).Append(post);
+
+                        return pre;
+                    }
+                }
+                else if (Equals(type, typeof(AnchorElement)))
+                {
+                    string href = null;
+                    string altText = null;
+
+                    try
+                    {
+                        href = match.Groups[1].Value;
+                        href += match.Groups[2].Value;
+
+                        altText = match.Groups[4].Value;
+                    }
+                    catch (Exception ignore)
+                    {
                     }
 
+                    IDocumentElement pre = ParseLine(context[..match.Index]);
+                    IDocumentElement mid = new AnchorElement(href, altText);
+                    IDocumentElement post = ParseLine(context[(match.Index + match.Length)..]);
 
-                    return new AttributeElement(temp[0], temp[1], temp[2]);
+                    pre.Append(mid).Append(post);
+
+                    return pre;
                 }
-
-            }
-            else if (document.StartsWith("_"))
-            { // Quotation
-
-                Regex quoteRegex = new Regex("____");
-                Match match = quoteRegex.Match(document);
-
-                if (match.Success)
+                else if (Equals(type, typeof(BoldTextElement)))
                 {
-                    return new QuotationElement(document);
+                    IDocumentElement pre = ParseLine(context[..match.Index]);
+                    IDocumentElement mid = new BoldTextElement(ParseLine(match.Groups[1].Value));
+                    IDocumentElement post = ParseLine(context[(match.Index + match.Length)..]);
+
+                    pre.Append(mid).Append(post);
+
+                    return pre;
                 }
-
-            }
-            else if (document.StartsWith("//"))
-            { // Comment
-                Regex commentRegex = new Regex("//");
-                Match match = commentRegex.Match(document);
-
-                if (match.Success)
+                else if (Equals(type, typeof(ItalicTextElement)))
                 {
-                    return new CommentElement(commentRegex.Replace(document, ""));
-                }
+                    IDocumentElement pre = ParseLine(context[..match.Index]);
+                    IDocumentElement mid = new ItalicTextElement(ParseLine(match.Groups[1].Value));
+                    IDocumentElement post = ParseLine(context[(match.Index + match.Length)..]);
 
+                    pre.Append(mid).Append(post);
+
+                    return pre;
+                }
+                else if (Equals(type, typeof(FootNoteElement)))
+                {
+                    IDocumentElement pre = ParseLine(context[..match.Index]);
+                    IDocumentElement mid = new FootNoteElement(ParseLine(match.Groups[1].Value));
+                    IDocumentElement post = ParseLine(context[(match.Index + match.Length)..]);
+
+                    pre.Append(mid).Append(post);
+
+                    return pre;
+                }
             }
-            else if (document.StartsWith(":"))
+
+            return new PlainTextElement(context);
+        }
+
+        private bool EndOfContainer(IDocumentElement left, IDocumentElement right)
+        {
+            if (left is UnOrderedListElement leftUl)
             {
-                return new DocsElement(document);
-            }
-            else if (document.Contains("<<"))
-            { //
-                Regex crossRefRegex = new Regex("<<+.+>>");
-                Match match = crossRefRegex.Match(document);
-
-                if (match.Success)
+                if (right is UnOrderedListElement rightUl)
                 {
-
-                    string temp = new Regex("[<>]").Replace(match.Value, "");
-                    string[] strings = temp.Split(",");
-
-
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new CrossReferenceElement(strings[0], strings[1])).Append(Parse(document[(match.Index + match.Length)..]));
-
-                    return element;
-                }
-            }
-            else if (document.Contains("://"))
-            { // protocol ref
-                Regex protocolIncludeAltTextRegex = new Regex("(\\S+://)(.+)(\\[(.*)])");
-                Regex protocolExcludeAltTextRegex = new Regex("(\\S+://[^ ]+)");
-
-                Match match = protocolIncludeAltTextRegex.Match(document);
-
-                if (match.Success)
-                {
-                    string href = match.Groups[1].Value + match.Groups[2].Value;
-                    string altText = match.Groups[4].Value;
-
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new AnchorElement(href, altText)).Append(Parse(document[(match.Index + match.Length)..]));
-
-                    return element;
-
-                }
-                else if ((match = protocolExcludeAltTextRegex.Match(document)).Success)
-                {
-                    //match = new Regex("(\\S+://[^ ])+ $").Match(s)
-                    string href = match.Groups[1].Value;
-
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new AnchorElement(href)).Append(Parse(document[(match.Index + match.Length)..]));
-
-                    return element;
-
+                    return rightUl.Level <= leftUl.Level;
                 }
 
+                return string.IsNullOrWhiteSpace(right.ToString());
             }
-            else if (document.Contains("*"))
-            { // 좌우 스플릿 후 recursion 형태로 해야할 필요성이 보임.
-                Regex boldRegex = new Regex("\\*(.*)\\*");
-
-                Match match = boldRegex.Match(document);
-
-                if (match.Success)
-                {
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new BoldTextElement(Parse(match.Groups[1].Value))).Append(Parse(document[(match.Index + match.Length)..]));
-
-                    return element;
-                }
-
-            }
-            else if (document.Contains("_"))
+            else if (left is OrderedListElement leftOl)
             {
-                Regex italicRegex = new Regex("_(.*)_");
-                Match match = italicRegex.Match(document);
-
-                if (match.Success)
+                if (right is OrderedListElement rightOl)
                 {
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new ItalicTextElement(Parse(match.Groups[1].Value))).Append(Parse(document[(match.Index + match.Length)..]));
-
-                    return element;
+                    return rightOl.Level <= leftOl.Level;
                 }
+
+                return string.IsNullOrWhiteSpace(right.ToString());
             }
-            else if (document.Contains("footnote:"))
+            else if (left.GetType() == right.GetType())
             {
-                Regex footnoteRegex = new Regex("footnote:\\[(.*)]");
-                Match match = footnoteRegex.Match(document);
-
-                if (match.Success)
-                {
-                    DocsElement element = Parse(document[..match.Index]);
-                    element.Append(new FootNoteElement(Parse(match.Groups[1].Value))).Append(Parse(document[(match.Index + match.Length)..]));
-                    return element;
-                }
+                throw new ContainerCloseElementException();
             }
-            return new LineElement(document);
+
+            return false;
         }
     }
-}
 
+    internal class ContainerCloseElementException : SystemException
+    {
+    }
+}

@@ -11,15 +11,12 @@ namespace DocumentParser.Elements.Implementations
 
         public CrossReferenceElement(string refTarget, string altText) : this(refTarget)
         {
-            AltText = altText;
+            AltText = string.IsNullOrWhiteSpace(altText) ? refTarget : altText;
         }
 
         public string AltText { get; }
 
-        public string RefTarget
-        {
-            get { return Value.ToString(); }
-        }
+        public string RefTarget => Value.ToString();
 
         public override object Accept(IDocumentVisitor visitor)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using DocumentParser.Domain;
+using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 
 namespace DocumentParser.Parsers
@@ -10,7 +11,7 @@ namespace DocumentParser.Parsers
         Document LoadFile(string filePath);
         Document LoadFile(FileStream file);
 
-        DocsElement Parse(string document);
+        IDocumentElement Parse(string context);
     }
 }
 

@@ -4,13 +4,9 @@ namespace DocumentParser.Elements.Implementations
 {
     public class ExampleBlockElement : DocsElement
     {
-        public ExampleBlockElement(string example) : base()
+        public ExampleBlockElement(string value) : base(value)
         {
-            Value = example;
-        }
-
-        public string Example {
-            get { return Value.ToString(); }
+            InitContainer();
         }
 
         public override object Accept(IDocumentVisitor visitor)

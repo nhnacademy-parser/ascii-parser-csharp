@@ -25,12 +25,10 @@ namespace DocumentParser.Visitors
         string Visit(ImageElement element);
 
         string Visit(ItalicTextElement element);
-
-        string Visit(IdAttributeElement element);
-
+        
         string Visit(ListingBlockElement element);
 
-        string Visit(LineElement element);
+        string Visit(InlineElement element);
 
         string Visit(OrderedListElement element);
 
@@ -43,6 +41,8 @@ namespace DocumentParser.Visitors
         string Visit(TitleElement element);
 
         string Visit(UnOrderedListElement element);
+        
+        string Visit(PlainTextElement element);
 
     }
 }

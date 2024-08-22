@@ -1,29 +1,27 @@
 ﻿using System;
+using System.Collections;
 using DocumentParser.Visitors;
 using System.Collections.Generic;
 using System.Text;
 
 namespace DocumentParser.Elements.Implementations
 {
-    public class DocsElement:IElement
+    public class DocsElement : IDocumentElement
     {
+        private AttributeElement _attributeElement;
+
         public DocsElement()
         {
-            Children = new List<DocsElement>();
-        }
-      
-        public DocsElement(object value)
-        {
-            Value = value;
         }
 
-        public object Value {get;  protected set; }
-        public string ValueString { get { return Value.ToString().TrimEnd(); } }
-        public DocsElement Next { get; set; }
-        public DocsElement Parent
+        protected DocsElement(object boldText)
         {
-            get; set;
+            Value = boldText;
         }
+
+        public object Value { get; protected set; }
+        public IDocumentElement Next { get; private set; }
+        public DocsElement Parent { get; set; }
 
         public virtual object Accept(IDocumentVisitor visitor)
         {
@@ -32,7 +30,7 @@ namespace DocumentParser.Elements.Implementations
 
         public void AddChild(DocsElement docsElement)
         {
-            if(IsContainer)
+            if (IsContainer)
             {
                 Children.Add(docsElement);
             }
@@ -40,53 +38,25 @@ namespace DocumentParser.Elements.Implementations
             {
                 throw new NotSupportedException("this Element can't have children");
             }
-
         }
 
-        public virtual bool EndOfContaier(DocsElement element)
+        protected void InitContainer()
         {
-            if (element.IsContainer)
-            {
-                return Type.Equals(this.GetType(), element.GetType());
-            }
-
-            return false;
+            Children = new List<IDocumentElement>();
         }
 
-        public bool IsContainer
+        public bool IsContainer => Children != null;
+
+        public List<IDocumentElement> Children { get; private set; }
+
+        public IDocumentElement Append(IDocumentElement element)
         {
-            get { return Children != null; }
-        }
-
-        public List<DocsElement> Children { get; }
-
-        public DocsElement Append(DocsElement element)
-        { 
             return Next = element;
         }
 
-        public override string ToString()
+        public void AddAttribute(AttributeElement attributeElement)
         {
-            StringBuilder stringBuilder = new StringBuilder();
-
-            DocsElement temp = this;
-            for(; temp.Parent != null; temp = temp.Parent)
-            {
-                stringBuilder.Append(' ');
-            }
-
-            stringBuilder.Append(Value).Append('\n');
-
-            if(Children == null)
-            {
-                return stringBuilder.ToString();
-            }
-            foreach(DocsElement child in Children)
-            {
-                stringBuilder.Append(child.ToString());
-            }
-
-            return stringBuilder.ToString();
+            _attributeElement = attributeElement;
         }
     }
 }

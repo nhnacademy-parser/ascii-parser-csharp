@@ -27,5 +27,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DocumentParser\DocumentParser.csproj" />
+<!--    <ProjectReference Include="DocumentParserTest.csproj" />-->
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Asciidocs\template.adoc" />
   </ItemGroup>
 </Project>

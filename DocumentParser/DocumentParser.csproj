@@ -19,4 +19,8 @@
     <Folder Include="Analyzers\" />
     <Folder Include="Analyzers\Implementations\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="resources\asciidocs\image-file-name.png" />
+    <None Remove="resources\asciidocs\template.adoc" />
+  </ItemGroup>
 </Project>

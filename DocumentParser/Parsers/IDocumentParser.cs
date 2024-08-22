@@ -9,7 +9,7 @@ namespace DocumentParser.Parsers
     public interface IDocumentParser
     {
         Document LoadFile(string filePath);
-        Document LoadFile(FileStream file);
+        Document LoadFile(Stream file);
 
         IDocumentElement Parse(string context);
     }

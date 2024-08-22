@@ -84,7 +84,7 @@ namespace DocumentParser.Visitors.implementations
 
         public string Visit(ImageElement element)
         {
-            return HtmlTag.TagBlock("img", element.AltText,
+            return HtmlTag.TagBlock("img", string.Empty,
                 new KeyValuePair<string, string>("src", element.Href),
                 new KeyValuePair<string, string>("alt", element.AltText)
             );

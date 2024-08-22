@@ -1,54 +1,43 @@
-﻿using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using DocumentParser.Domain;
-using DocumentParser.Elements.Implementations;
-using DocumentParser.Parsers.Implementations;
-using DocumentParser.Visitors.implementations;
+﻿using System.Diagnostics;
+using System.Reflection;
+using System.Resources;
+using Xunit.Abstractions;
 
-namespace ParserTest;
+namespace DocumentParserTest;
 
 public class AsciiDoctorParserTest
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public AsciiDoctorParserTest(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
     [Fact]
-    public void ConvertToHtml()
+    void res()
     {
-        AsciiDocsParser asciiDocsParser = new AsciiDocsParser();
-        
-        Document document = asciiDocsParser.LoadFile("../../../resources/asciidocs/template.adoc");
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        Stream? fileStream = assembly.GetManifestResourceStream("DocumentParserTest.Resources.Asciidocs.template.adoc");
 
-        FileStream outputFileStream = File.Create("../../../resources/asciidocs/test.html");
-        StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
+        Debug.Assert(fileStream != null, nameof(fileStream) + " != null");
 
-        HtmlConverter htmlConverter = new HtmlConverter();
+        StreamReader streamReader = new StreamReader(fileStream);
 
-        string htmlDocument = document.Convert(htmlConverter);
-
-        outputStreamWriter.Write(htmlDocument);
-        outputStreamWriter.Flush();
+        _testOutputHelper.WriteLine(streamReader.ReadToEnd());
     }
-    
-    // [Fact]
-    public void ConvertWebAsciiToHtml()
+
+    [Fact]
+    void Download()
     {
-        AsciiDocsParser asciiDocsParser = new AsciiDocsParser();
-        
-        WebClient webClient = new WebClient();
-        
-        webClient.DownloadFile("https://raw.githubusercontent.com/gikpreet/class-programming_with_java/master/Module%2004%20Statement%EC%99%80%20Exception/homework/maze.adoc", "../../../resources/asciidocs/download.adoc");
-        
-        Document document = asciiDocsParser.LoadFile("../../../resources/asciidocs/download.adoc");
+        string uri =
+            "https://raw.githubusercontent.com/gikpreet/class-programming_with_java/master/Module%2004%20Statement%EC%99%80%20Exception/homework/maze.adoc";
 
-        FileStream outputFileStream = File.Create("../../../resources/asciidocs/test.html");
-        StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
+        HttpClient httpClient = new HttpClient();
 
-        HtmlConverter htmlConverter = new HtmlConverter();
+        HttpResponseMessage response = httpClient.Send(new HttpRequestMessage(HttpMethod.Get, uri));
+        StreamReader streamReader = new StreamReader(response.Content.ReadAsStream());
 
-        string htmlDocument = document.Convert(htmlConverter);
-
-        outputStreamWriter.Write(htmlDocument);
-        outputStreamWriter.Flush();
+        _testOutputHelper.WriteLine(streamReader.ReadToEnd());
     }
-    
-    
 }

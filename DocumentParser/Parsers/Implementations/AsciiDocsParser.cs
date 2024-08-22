@@ -28,10 +28,10 @@ namespace DocumentParser.Parsers.Implementations
             return LoadFile(File.OpenRead(filePath));
         }
 
-        public Document LoadFile(FileStream file)
+        public Document LoadFile(Stream stream)
         {
             List<DocsElement> documentElements = new List<DocsElement>();
-            StreamReader inputStreamReader = new StreamReader(file);
+            StreamReader inputStreamReader = new StreamReader(stream);
 
             while (!inputStreamReader.EndOfStream)
             {

@@ -17,7 +17,7 @@ namespace DocumentParser.Domain.Html
         public static string TagBlock(string tagName, string value, params KeyValuePair<string, string[]>[] attributes)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append(LineBreak).Append("<");
+            sb.Append("<");
             sb.Append(tagName);
             foreach (KeyValuePair<string, string[]> attribute in attributes)
             {
@@ -34,10 +34,10 @@ namespace DocumentParser.Domain.Html
                 sb.Append(DoubleQuotes);
             }
 
-            sb.Append(">").Append(LineBreak);
+            sb.Append(">");
             sb.Append(value);
 
-            sb.Append(Indent).Append(LineBreak).Append("</").Append(tagName).Append(">");
+            sb.Append(Indent).Append("</").Append(tagName).Append(">");
             sb.Append(LineBreak);
 
             return sb.ToString();

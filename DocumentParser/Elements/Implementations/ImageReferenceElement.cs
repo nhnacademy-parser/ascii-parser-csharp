@@ -2,15 +2,15 @@
 
 namespace DocumentParser.Elements.Implementations
 {
-    public class ImageElement : DocsElement
+    public class ImageReferenceElement : DocsElement
     {
 
-        public ImageElement(string href) : base(href)
+        public ImageReferenceElement(string href) : base(href)
         {
             AltText = "";
         }
 
-        public ImageElement(string href, string altText) : this(href)
+        public ImageReferenceElement(string href, string altText) : this(href)
         {
             AltText = altText;
         }

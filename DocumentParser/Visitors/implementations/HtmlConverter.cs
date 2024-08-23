@@ -82,11 +82,11 @@ namespace DocumentParser.Visitors.implementations
             return HtmlTag.TagBlock(tag, element.Heading, "id", id);
         }
 
-        public string Visit(ImageElement element)
+        public string Visit(ImageReferenceElement referenceElement)
         {
             return HtmlTag.TagBlock("img", string.Empty,
-                new KeyValuePair<string, string>("src", element.Href),
-                new KeyValuePair<string, string>("alt", element.AltText)
+                new KeyValuePair<string, string>("src", referenceElement.Href),
+                new KeyValuePair<string, string>("alt", referenceElement.AltText)
             );
         }
 

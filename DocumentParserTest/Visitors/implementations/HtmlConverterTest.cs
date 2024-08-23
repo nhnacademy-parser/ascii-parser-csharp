@@ -20,7 +20,7 @@ public class HtmlConverterTest
         string htmlDocument = new AsciiDocsParser().LoadFile(stream).Convert(new HtmlConverter());
 
         string userHomePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/downloads";
-        FileStream outputFileStream = File.Create(userHomePath + "/test.html");
+        FileStream outputFileStream = File.Create(userHomePath + "/document-parser-test-on-project-resource.html");
         StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
         outputStreamWriter.Write(htmlDocument);
         outputStreamWriter.Flush();
@@ -38,7 +38,7 @@ public class HtmlConverterTest
             .Convert(new HtmlConverter());
 
         string userHomePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/downloads";
-        FileStream outputFileStream = File.Create(userHomePath + "/test.html");
+        FileStream outputFileStream = File.Create(userHomePath + "/document-parser-test-on-web.html");
         StreamWriter outputStreamWriter = new StreamWriter(outputFileStream);
         outputStreamWriter.Write(htmlDocument);
         outputStreamWriter.Flush();

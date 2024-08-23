@@ -19,6 +19,10 @@ namespace DocumentParser.Domain
             _elements = new List<IDocumentElement>();
         }
 
+        public object Header { get; set; }
+        public object Body { get; set; }
+        public object Footer { get; set; }
+
         public void Append(IDocumentElement element)
         {
             _elements.Add(element);

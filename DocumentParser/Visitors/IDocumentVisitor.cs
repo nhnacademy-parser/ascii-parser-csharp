@@ -22,7 +22,7 @@ namespace DocumentParser.Visitors
 
         string Visit(HeadingElement element);
 
-        string Visit(ImageElement element);
+        string Visit(ImageReferenceElement referenceElement);
 
         string Visit(ItalicTextElement element);
         

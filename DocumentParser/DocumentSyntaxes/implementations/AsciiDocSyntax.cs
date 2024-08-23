@@ -49,7 +49,7 @@ namespace DocumentParser.DocumentSyntaxes
             yield return new AsciiDocSyntax("-", "----$", typeof(ListingBlockElement));
             yield return new AsciiDocSyntax("-", "-", typeof(UnOrderedListElement));
 
-            yield return new AsciiDocSyntax("i", "^image::", typeof(ImageElement));
+            yield return new AsciiDocSyntax("i", "^image::", typeof(ImageReferenceElement));
 
             yield return new AsciiDocSyntax("|", "\\|===$", typeof(TableElement));
 

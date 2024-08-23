@@ -30,6 +30,9 @@
 <!--    <ProjectReference Include="DocumentParserTest.csproj" />-->
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Asciidocs\footer.adoc" />
     <EmbeddedResource Include="Resources\Asciidocs\template.adoc" />
+    <None Remove="Resources\Asciidocs\header.adoc" />
+    <EmbeddedResource Include="Resources\Asciidocs\header.adoc" />
   </ItemGroup>
 </Project>

@@ -180,7 +180,7 @@ namespace DocumentParser.Parsers.Implementations
                 {
                     return new ListingBlockElement(ParseLine(pattern.Replace(context, match => "")));
                 }
-                else if (type == typeof(ImageElement))
+                else if (type == typeof(ImageReferenceElement))
                 {
                     String href = pattern.Replace(context, "");
 
@@ -192,7 +192,7 @@ namespace DocumentParser.Parsers.Implementations
                         String alt = match.Value;
 
                         href = altTextRegex.Replace(href, "");
-                        return new ImageElement(href, alt.Substring(1, alt.Length - 2));
+                        return new ImageReferenceElement(href, alt.Substring(1, alt.Length - 2));
                     }
                 }
                 else if (type == typeof(TableElement))

@@ -35,12 +35,12 @@ namespace DocumentParser.DocumentSyntaxes
 
         public IEnumerator<AsciiDocSyntax> GetEnumerator()
         {
-            yield return new AsciiDocSyntax("=", "=", typeof(SectionTitleElement));
+            yield return new AsciiDocSyntax("=", "={1,}", typeof(SectionTitleElement));
             yield return new AsciiDocSyntax(":", ":", typeof(AttributeEntryElement));
 
             // Block, Structural containers
 
-            // yield return new AsciiDocSyntax("/", "/{4,}\n.*|^[^\n]*$", typeof(CommentBlockElement));
+            yield return new AsciiDocSyntax("/", "(/{4,})+(\n.*|^[^\n]*$)", typeof(CommentBlockElement));
             // yield return new AsciiDocSyntax("=", "={4,}\n.*|^[^\n]*$", typeof(ExampleBlockElement));
             // yield return new AsciiDocSyntax("-", "-{4,}\n.*|^[^\n]*$", typeof(ListingBlockElement));
             // yield return new AsciiDocSyntax(".", ".{4,}\n.*|^[^\n]*$", typeof(LiteralBlockElement));

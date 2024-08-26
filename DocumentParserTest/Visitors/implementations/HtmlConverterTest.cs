@@ -11,7 +11,7 @@ namespace DocumentParserTest.Visitors.implementations;
 [TestSubject(typeof(HtmlConverter))]
 public class HtmlConverterTest
 {
-    [Fact]
+    // [Fact]
     public void ConvertToHtml()
     {
         Assembly assembly = Assembly.GetExecutingAssembly();

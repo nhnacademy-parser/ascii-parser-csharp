@@ -87,6 +87,18 @@ public class AsciiDoctorParserTest
     [Fact]
     void Parse_SidebarElement()
     {
+        string input = "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
+        
+        List<IDocumentElement> output = _documentParser.Parse(input);
+        
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[1] is SideBarBlockElement);
+    }
+    
+    [Fact]
+    void Parse_SidebarElement_unclosed()
+    {
         string input = "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.";
         
         List<IDocumentElement> output = _documentParser.Parse(input);

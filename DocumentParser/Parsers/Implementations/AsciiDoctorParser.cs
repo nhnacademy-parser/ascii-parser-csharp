@@ -9,6 +9,7 @@ using DocumentParser.Analyzers.Implementations;
 using DocumentParser.DocumentSyntaxes;
 using DocumentParser.Domain;
 using DocumentParser.Elements;
+using DocumentParser.Elements.Implementations;
 
 namespace DocumentParser.Parsers.Implementations
 {
@@ -77,10 +78,20 @@ namespace DocumentParser.Parsers.Implementations
 
                     element.Children = list;
                 }
+                else if (syntax.InstanceType == typeof(SectionTitleElement))
+                {
+                    Group delimiterGroup = syntax.Pattern.Match(line).Groups[0];
+                    string sectionTitle = strings[i].Substring(delimiterGroup.Index + delimiterGroup.Length);
+                    IDocumentElement element =
+                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
+                            { sectionTitle }) as IDocumentElement;
+                    documentElements.Add(element);
+                }
                 else
                 {
-                    IDocumentElement element = syntax.InstanceType.GetConstructors()[0].Invoke(new object[] { strings[i] })
-                        as IDocumentElement;
+                    IDocumentElement element =
+                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[] { strings[i] })
+                            as IDocumentElement;
                     documentElements.Add(element);
                 }
             }

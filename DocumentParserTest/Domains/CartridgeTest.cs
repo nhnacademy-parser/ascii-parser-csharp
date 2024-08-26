@@ -1,5 +1,6 @@
 using DocumentParser.Domain;
-using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements;
+using DocumentParser.Visitors;
 using JetBrains.Annotations;
 
 namespace DocumentParserTest.Domains;
@@ -10,7 +11,7 @@ public class CartridgeTest
     [Fact]
     public void TryRemove_EmptyCartridge()
     {
-        Cartridge<DocsElement> cartridge = new();
+        Cartridge<object> cartridge = new();
 
         Assert.Throws<InvalidOperationException>(() => cartridge.TryRemove());
     }
@@ -19,19 +20,19 @@ public class CartridgeTest
     [Fact]
     public void TryAdd_AlreadyExists()
     {
-        Cartridge<DocsElement> cartridge = new();
+        Cartridge<object> cartridge = new();
 
-        cartridge.TryAdd(new DocsElement());
-        Assert.Throws<InvalidOperationException>(() => cartridge.TryAdd(new DocsElement()));
+        cartridge.TryAdd(new { });
+        Assert.Throws<InvalidOperationException>(() => cartridge.TryAdd(new { }));
     }
 
 
     [Fact]
     public void TryAdd()
     {
-        Cartridge<DocsElement> cartridge = new();
+        Cartridge<object> cartridge = new();
 
-        cartridge.TryAdd(new DocsElement());
+        cartridge.TryAdd(new { });
 
         Assert.True(cartridge.IsFilled);
     }
@@ -40,9 +41,9 @@ public class CartridgeTest
     [Fact]
     public void TryRemove()
     {
-        Cartridge<DocsElement> cartridge = new();
+        Cartridge<object> cartridge = new();
 
-        cartridge.TryAdd(new DocsElement());
+        cartridge.TryAdd(new { });
 
         Assert.NotNull(cartridge.TryRemove());
     }

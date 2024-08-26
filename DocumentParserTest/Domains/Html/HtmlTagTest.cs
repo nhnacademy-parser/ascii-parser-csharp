@@ -1,4 +1,4 @@
-using DocumentParser.Domain.Html;
+using DocumentParser.Domains.Htmls;
 using JetBrains.Annotations;
 using Xunit.Abstractions;
 
@@ -21,7 +21,7 @@ public class HtmlTagTest
             new KeyValuePair<string, string[]>[1]
                 { new KeyValuePair<string, string[]>("class", new string[] { "title", "href" }) }
         );
-        
+
         _testOutputHelper.WriteLine(h1);
     }
 }

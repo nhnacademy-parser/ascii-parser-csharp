@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DocumentParser.Domain.Html
+namespace DocumentParser.Domains.Htmls
 {
     public class HtmlTag
     {

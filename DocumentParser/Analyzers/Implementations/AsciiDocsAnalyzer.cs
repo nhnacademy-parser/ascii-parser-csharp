@@ -15,6 +15,7 @@ namespace DocumentParser.Analyzers.Implementations
 
         public AsciiDocsAnalyzer()
         {
+            
         }
 
         public void Init()
@@ -38,7 +39,7 @@ namespace DocumentParser.Analyzers.Implementations
         public IDocumentSyntax Analyze(string context)
         {
             string index = context[..1];
-            
+
             if (_syntaxMap.ContainsKey(index))
             {
                 List<AsciiDocSyntax> list = _syntaxMap.GetValueOrDefault(index);
@@ -66,7 +67,8 @@ namespace DocumentParser.Analyzers.Implementations
                 }
             }
 
-            return new AsciiDocSyntax(string.Empty, string.Empty, typeof(PlainTextElement));
+            return new AsciiDocSyntax(string.Empty, "", typeof(ParagraphElement));
+
         }
     }
 }

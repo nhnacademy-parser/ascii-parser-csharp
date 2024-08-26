@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using DocumentParser.Elements;
-using DocumentParser.Elements.Implementations;
 using DocumentParser.Visitors.implementations;
 
 namespace DocumentParser.Domain

@@ -17,7 +17,7 @@ public class HtmlConverterTest
         Assembly assembly = Assembly.GetExecutingAssembly();
         Stream? stream = assembly.GetManifestResourceStream("DocumentParserTest.Resources.Asciidocs.template.adoc");
 
-        string htmlDocument = new AsciiDocsParser().LoadFile(stream).Convert(new HtmlConverter());
+        string htmlDocument = new AsciiDoctorParser().LoadFile(stream).Convert(new HtmlConverter());
 
         string userHomePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/downloads";
         FileStream outputFileStream = File.Create(userHomePath + "/document-parser-test-on-project-resource.html");
@@ -34,7 +34,7 @@ public class HtmlConverterTest
         HttpClient httpClient = new HttpClient();
         HttpResponseMessage response = httpClient.Send(new HttpRequestMessage(HttpMethod.Get, uri));
 
-        string htmlDocument = new AsciiDocsParser().LoadFile(response.Content.ReadAsStream())
+        string htmlDocument = new AsciiDoctorParser().LoadFile(response.Content.ReadAsStream())
             .Convert(new HtmlConverter());
 
         string userHomePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/downloads";

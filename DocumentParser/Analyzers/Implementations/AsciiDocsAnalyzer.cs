@@ -15,7 +15,6 @@ namespace DocumentParser.Analyzers.Implementations
 
         public AsciiDocsAnalyzer()
         {
-            
         }
 
         public void Init()
@@ -38,7 +37,7 @@ namespace DocumentParser.Analyzers.Implementations
 
         public IDocumentSyntax Analyze(string context)
         {
-            string index = context[..1];
+            string index = context.Length == 0 ? "" : context[..1];
 
             if (_syntaxMap.ContainsKey(index))
             {
@@ -46,9 +45,7 @@ namespace DocumentParser.Analyzers.Implementations
 
                 foreach (AsciiDocSyntax syntax in list)
                 {
-                    Match match = syntax.Pattern.Match(context);
-
-                    if (match.Success)
+                    if (syntax.Pattern.IsMatch(context))
                     {
                         return syntax;
                     }
@@ -68,7 +65,6 @@ namespace DocumentParser.Analyzers.Implementations
             }
 
             return new AsciiDocSyntax(string.Empty, "", typeof(ParagraphElement));
-
         }
     }
 }

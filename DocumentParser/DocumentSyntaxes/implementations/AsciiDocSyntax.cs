@@ -21,7 +21,6 @@ namespace DocumentParser.DocumentSyntaxes
             InstanceType = instanceType;
         }
 
-
         public AsciiDocSyntax(string index, Regex pattern, Type instanceType)
         {
             Index = index;
@@ -35,29 +34,30 @@ namespace DocumentParser.DocumentSyntaxes
 
         public IEnumerator<AsciiDocSyntax> GetEnumerator()
         {
-            yield return new AsciiDocSyntax("=", "={1,}", typeof(SectionTitleElement));
-            yield return new AsciiDocSyntax(":", ":", typeof(AttributeEntryElement));
+            yield return new AsciiDocSyntax("=", new Regex("={1,} +.*"), typeof(SectionTitleElement));
+            yield return new AsciiDocSyntax(":", new Regex(":"), typeof(AttributeEntryElement));
 
             // Block, Structural containers
 
-            yield return new AsciiDocSyntax("/", "(/{4,})+(\n.*|^[^\n]*$)", typeof(CommentBlockElement));
-            // yield return new AsciiDocSyntax("=", "={4,}\n.*|^[^\n]*$", typeof(ExampleBlockElement));
-            // yield return new AsciiDocSyntax("-", "-{4,}\n.*|^[^\n]*$", typeof(ListingBlockElement));
-            // yield return new AsciiDocSyntax(".", ".{4,}\n.*|^[^\n]*$", typeof(LiteralBlockElement));
-            // yield return new AsciiDocSyntax("-", "-{2,}\n.*|^[^\n]*$", typeof(OpenBlockElement));
-            yield return new AsciiDocSyntax("*", "(\\*{4,})+(\n.*|^[^\n]*$)", typeof(SideBarBlockElement));
-            //
-            // yield return new AsciiDocSyntax("|", "\\|={3,}\n.*|^[^\n]*$", typeof(TableBlockElement));
-            // yield return new AsciiDocSyntax(",", ",={3,}\n.*|^[^\n]*$", typeof(TableBlockElement));
-            // yield return new AsciiDocSyntax(":", ":={3,}\n.*|^[^\n]*$", typeof(TableBlockElement));
-            // yield return new AsciiDocSyntax("!", "!={3,}\n.*|^[^\n]*$", typeof(TableBlockElement));
-            //
-            // yield return new AsciiDocSyntax("+", "+{4,}\n.*|^[^\n]*$", typeof(PassBlockElement));
-            // yield return new AsciiDocSyntax("_", "_{4,}\n.*|^[^\n]*$", typeof(QuotationBlockElement));
+            yield return new AsciiDocSyntax("/", new Regex("(/{4,})+\n.*|^[^\n]*$"), typeof(CommentBlockElement));
+            yield return new AsciiDocSyntax("=", new Regex("(={4,})+\n.*|^[^\n]*$"), typeof(ExampleBlockElement));
+            yield return new AsciiDocSyntax("-", new Regex("(-{4,})+\n.*|^[^\n]*$"), typeof(ListingBlockElement));
+            yield return new AsciiDocSyntax("-", new Regex("(-{2,})+\n.*|^[^\n]*$"), typeof(OpenBlockElement));
+            yield return new AsciiDocSyntax("_", new Regex("(_{4,})+\n.*|^[^\n]*$"), typeof(QuotationBlockElement));
+            yield return new AsciiDocSyntax(".", new Regex("(\\.{4,})+(\n.*|^[^\n]*$)"), typeof(LiteralBlockElement));
+            yield return new AsciiDocSyntax("*", new Regex("(\\*{4,})+\n.*|^[^\n]*$"), typeof(SideBarBlockElement));
+            yield return new AsciiDocSyntax("+", new Regex("(\\+{2,})+\n.*|^[^\n]*$"), typeof(PassBlockElement));
+
+            // Block, Table
+            yield return new AsciiDocSyntax("|", new Regex("(\\|={3,})+\n.*|^[^\n]*$"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax(",", new Regex("(,={3,})+\n.*|^[^\n]*$"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax(":", new Regex("(:={3,})+\n.*|^[^\n]*$"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax("!", new Regex("(!={3,})+\n.*|^[^\n]*$"), typeof(TableBlockElement));
 
 
-            //
-            // yield return new AsciiDocSyntax(".", "^\\.[^ .]", typeof(TitleElement));
+            yield return new AsciiDocSyntax(".", new Regex("^\\.[^ .]"), typeof(TitleElement));
+            yield return new AsciiDocSyntax("[", new Regex("^\\[+(.*)+]"), typeof(SpecialBlockElement));
+            
             // yield return new AsciiDocSyntax(".", "\\.", typeof(OrderedListElement));
             //
             // yield return new AsciiDocSyntax("*", "\\*\\*\\*\\*$", typeof(SideBarElement));

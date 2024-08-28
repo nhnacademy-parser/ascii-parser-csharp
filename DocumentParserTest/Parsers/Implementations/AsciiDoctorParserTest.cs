@@ -6,13 +6,20 @@ using DocumentParser.Elements.Implementations;
 using DocumentParser.Parsers;
 using DocumentParser.Parsers.Implementations;
 using JetBrains.Annotations;
+using Xunit.Abstractions;
 
 namespace DocumentParserTest.Parsers.Implementations;
 
 [TestSubject(typeof(IDocumentParser))]
 public class AsciiDoctorParserTest
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly IDocumentParser _documentParser = new AsciiDoctorParser();
+
+    public AsciiDoctorParserTest(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
 
     [Fact]
     void Parse_One_Paragraph()
@@ -45,9 +52,9 @@ public class AsciiDoctorParserTest
         List<IDocumentElement> output = _documentParser.Parse(input);
 
         Assert.NotNull(output);
-        Assert.True(output.Count == 3);
+        Assert.True(output.Count == 4);
     }
-    
+
     [Fact]
     void Parse_Section()
     {
@@ -87,27 +94,87 @@ public class AsciiDoctorParserTest
     [Fact]
     void Parse_SidebarElement()
     {
-        string input = "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
-        
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
+
         List<IDocumentElement> output = _documentParser.Parse(input);
+
         
+        output.ForEach(o => _testOutputHelper.WriteLine(o.ToString()));
         Assert.NotNull(output);
         Assert.True(output.Count == 2);
         Assert.True(output[1] is SideBarBlockElement);
     }
-    
+
+    [Fact]
+    void Parse_SidebarElement_second()
+    {
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****\nadditional paragraphs.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 3);
+        Assert.True(output[1] is SideBarBlockElement);
+    }
+
     [Fact]
     void Parse_SidebarElement_unclosed()
     {
-        string input = "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.";
-        
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.";
+
         List<IDocumentElement> output = _documentParser.Parse(input);
-        
+
         Assert.NotNull(output);
         Assert.True(output.Count == 2);
         Assert.True(output[1] is SideBarBlockElement);
     }
-    
+
+    [Fact]
+    void Parse_Nesting_Block()
+    {
+        string input =
+            "====\nHere's a sample AsciiDoc document:\n\n----\n= Document Title\nAuthor Name\n\nContent goes here.\n----\n\nThe document header is useful, but not required.\n====";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is ExampleBlockElement);
+        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+    }
+
+    [Fact]
+    void Parse_Nesting_SameStructuralBlock()
+    {
+        string input =
+            "====\nHere are your options:\n\n.Red Pill\n[%collapsible]\n======\nEscape into the real world.\n======\n\n.Blue Pill\n[%collapsible]\n======\nLive within the simulated reality without want or fear.\n======\n====\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is ExampleBlockElement);
+        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+    }
+
+    // [Fact]
+    void Parse_Nesting_SpecialBlock()
+    {
+        string input =
+            "[%collapsible]\n======\nEscape into the real world.\n======\n\n.Blue Pill\n[%collapsible]\n======\nLive within the simulated reality without want or fear.\n======";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is ExampleBlockElement);
+        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+    }
+
+
     private static Stream GetStream(string filename)
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
@@ -116,4 +183,4 @@ public class AsciiDoctorParserTest
         Debug.Assert(stream != null, nameof(stream) + " != null");
         return stream;
     }
-} 
+}

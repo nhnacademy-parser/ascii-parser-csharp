@@ -50,7 +50,38 @@ public class RegexTest
     [Fact]
     public void RegexTest4()
     {
+        Regex regex = new Regex("(\\*{4,})+\n.*|^[^\n]*$");
+        
+        string s =
+            "****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.";
+        
+        Assert.Matches(regex, s);
     }
+    
+    [Fact]
+    public void RegexTest5()
+    {
+        Regex regex = new Regex("(\\.{4,})+(\n.*|^[^\n]*$)");
+        
+        string s =
+            ".Red Pill";
+        
+        Assert.DoesNotMatch(regex, s);
+    }
+    
+    
+    [Fact]
+    public void RegexTest6()
+    {
+        Regex regex = new Regex("^\\[+(.*)+]");
+        
+        string s =
+            "[%collapsible]";
+        
+        Assert.Matches(regex, s);
+    }
+    
+    
 }
 
 //

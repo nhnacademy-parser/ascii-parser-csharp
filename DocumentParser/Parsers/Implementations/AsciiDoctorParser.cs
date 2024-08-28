@@ -10,6 +10,9 @@ using DocumentParser.DocumentSyntaxes;
 using DocumentParser.Domain;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Addition;
+using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.Parsers.Implementations
 {
@@ -97,7 +100,7 @@ namespace DocumentParser.Parsers.Implementations
                     TitleElement element =
                         syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
                             { line }) as TitleElement;
-                    titleCartridge.TryAdd(element);
+                    // titleCartridge.TryAdd(element);
                 }
                 else
                 {

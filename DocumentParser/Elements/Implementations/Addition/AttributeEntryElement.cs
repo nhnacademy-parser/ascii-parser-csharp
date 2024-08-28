@@ -1,6 +1,6 @@
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations.Addition
 {
     public class AttributeEntryElement : IDocumentElement
     {
@@ -8,7 +8,7 @@ namespace DocumentParser.Elements.Implementations
         {
         }
 
-        public override object Accept(IDocumentVisitor visitor)
+        public object Accept(IDocumentVisitor visitor)
         {
             throw new System.NotImplementedException();
         }

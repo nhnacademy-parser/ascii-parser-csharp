@@ -1,4 +1,4 @@
-namespace DocumentParser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations.Blocks
 {
     public class LiteralBlockElement : BlockElement
     {

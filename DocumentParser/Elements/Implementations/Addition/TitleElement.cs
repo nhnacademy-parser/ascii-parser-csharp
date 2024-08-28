@@ -1,6 +1,6 @@
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations.Addition
 {
     public class TitleElement: IDocumentElement
     {
@@ -9,7 +9,7 @@ namespace DocumentParser.Elements.Implementations
             Title = title;
         }
         public string Title { get; set; }
-        public override object Accept(IDocumentVisitor visitor)
+        public object Accept(IDocumentVisitor visitor)
         {
             throw new System.NotImplementedException();
         }

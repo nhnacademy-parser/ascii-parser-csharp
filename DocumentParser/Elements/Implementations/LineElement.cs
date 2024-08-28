@@ -2,7 +2,7 @@ using System;
 using DocumentParser.Domains.Nodes;
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements
+namespace DocumentParser.Elements.Implementations
 {
     public class LineElement : Node<IDocumentElement>
     {

@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.Reflection;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Addition;
+using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Inlines;
 using DocumentParser.Parsers;
 using DocumentParser.Parsers.Implementations;
 using JetBrains.Annotations;
@@ -98,9 +101,7 @@ public class AsciiDoctorParserTest
             "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
 
         List<IDocumentElement> output = _documentParser.Parse(input);
-
         
-        output.ForEach(o => _testOutputHelper.WriteLine(o.ToString()));
         Assert.NotNull(output);
         Assert.True(output.Count == 2);
         Assert.True(output[1] is SideBarBlockElement);
@@ -160,7 +161,7 @@ public class AsciiDoctorParserTest
         Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
     }
 
-    // [Fact]
+    [Fact]
     void Parse_Nesting_SpecialBlock()
     {
         string input =
@@ -169,10 +170,12 @@ public class AsciiDoctorParserTest
         List<IDocumentElement> output = _documentParser.Parse(input);
 
         Assert.NotNull(output);
-        Assert.True(output.Count == 1);
-        Assert.True(output[0] is ExampleBlockElement);
-        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+        Assert.True(output.Count == 2);
+        Assert.True(output[0] is SpecialBlockElement);
+        Assert.True(((output[0] as BlockElement)!).Children.Count == 1);
     }
+    
+    
 
 
     private static Stream GetStream(string filename)

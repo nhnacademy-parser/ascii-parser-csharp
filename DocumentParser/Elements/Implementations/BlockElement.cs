@@ -1,22 +1,16 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using DocumentParser.Domain.Trees;
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements
+namespace DocumentParser.Elements.Implementations
 {
-    public class BlockElement : IDocumentElement, ITree<IDocumentElement>
+    public class BlockElement : DocumentElement, ITree<IDocumentElement>
     {
         private ICollection<IDocumentElement> _children = new List<IDocumentElement>();
         private ITree<IDocumentElement> _parent;
 
         public int Count => _children.Count;
-
-        public override object Accept(IDocumentVisitor visitor)
-        {
-            throw new NotImplementedException();
-        }
 
         public ICollection<IDocumentElement> Children
         {

@@ -1,6 +1,6 @@
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements.Implementations
+namespace DocumentParser.Elements.Implementations.Inlines
 {
     public class SectionTitleElement : IDocumentElement
     {
@@ -11,7 +11,7 @@ namespace DocumentParser.Elements.Implementations
 
         public string Title { get; set; }
 
-        public override object Accept(IDocumentVisitor visitor)
+        public object Accept(IDocumentVisitor visitor)
         {
             throw new System.NotImplementedException();
         }

@@ -2,8 +2,8 @@
 
 namespace DocumentParser.Elements
 {
-    public abstract class IDocumentElement
+    public interface IDocumentElement
     {
-        public abstract object Accept(IDocumentVisitor visitor);
+        object Accept(IDocumentVisitor visitor);
     }
 }

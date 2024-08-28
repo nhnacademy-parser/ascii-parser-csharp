@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using DocumentParser.Domain;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Addition;
+using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.DocumentSyntaxes
 {

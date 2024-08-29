@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations
@@ -17,5 +18,7 @@ namespace DocumentParser.Elements.Implementations
         {
             Attributes.Add(key, value);
         }
+
+        public ITree<IDocumentElement> Parent { get; set; }
     }
 }

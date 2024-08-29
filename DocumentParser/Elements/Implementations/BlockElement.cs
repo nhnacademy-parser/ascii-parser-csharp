@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using DocumentParser.Domain.Trees;
+using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations
@@ -8,20 +8,26 @@ namespace DocumentParser.Elements.Implementations
     public class BlockElement : DocumentElement, ITree<IDocumentElement>
     {
         private ICollection<IDocumentElement> _children = new List<IDocumentElement>();
-        private ITree<IDocumentElement> _parent;
 
         public int Count => _children.Count;
 
         public ICollection<IDocumentElement> Children
         {
             get => _children;
-            set => _children = value;
+            set
+            {
+                _children = value;
+                foreach (IDocumentElement child in _children)
+                {
+                    child.Parent = this;
+                }
+            }
         }
 
-        public ITree<IDocumentElement> Parent
+        public void AddChild(IDocumentElement child)
         {
-            get => _parent;
-            set => _parent = value;
+            _children.Add(child);
+            child.Parent = this;
         }
     }
 }

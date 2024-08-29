@@ -7,11 +7,14 @@ using System.Text.RegularExpressions;
 using DocumentParser.Analyzers;
 using DocumentParser.Analyzers.Implementations;
 using DocumentParser.DocumentSyntaxes;
+using DocumentParser.DocumentSyntaxes.implementations;
 using DocumentParser.Domain;
+using DocumentParser.Domains.Trees;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Blocks.Lists;
 using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.Parsers.Implementations
@@ -46,16 +49,14 @@ namespace DocumentParser.Parsers.Implementations
             Queue<string> lineQueue = new Queue<string>(context.Split('\n'));
             Cartridge<TitleElement> titleCartridge = new Cartridge<TitleElement>();
 
-            StringBuilder bodyBuilder = new StringBuilder();
-
             while (lineQueue.Count > 0)
             {
                 string line = lineQueue.Peek();
-                if (line.Trim().Length == 0 && bodyBuilder.Length != 0)
+
+                if (string.IsNullOrWhiteSpace(line))
                 {
-                    IDocumentElement element = new ParagraphElement(bodyBuilder.ToString());
-                    bodyBuilder.Clear();
-                    documentElements.Add(element);
+                    lineQueue.Dequeue();
+                    continue;
                 }
 
                 AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
@@ -64,6 +65,10 @@ namespace DocumentParser.Parsers.Implementations
                 if (syntax.InstanceType == typeof(SpecialBlockElement))
                 {
                     documentElements.Add(ParseSpecialBlock(lineQueue));
+                }
+                else if (syntax.InstanceType.IsSubclassOf(typeof(ListContainerElement)))
+                {
+                    documentElements.Add(ParseListElement(lineQueue));
                 }
                 else if (type.IsSubclassOf(typeof(BlockElement)))
                 {
@@ -92,7 +97,7 @@ namespace DocumentParser.Parsers.Implementations
                     IDocumentElement element =
                         syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
                             { attributeBuilder.ToString() }) as IDocumentElement;
-                    documentElements.Add(element);
+                    // documentElements.Add(element);
                 }
                 else if (syntax.InstanceType == typeof(TitleElement))
                 {
@@ -104,17 +109,95 @@ namespace DocumentParser.Parsers.Implementations
                 }
                 else
                 {
-                    bodyBuilder.Append(lineQueue.Dequeue());
+                    documentElements.Add(new ParagraphElement(lineQueue.Dequeue()));
                 }
             }
 
-            if (bodyBuilder.Length > 0)
+            return documentElements;
+        }
+
+        private IDocumentElement ParseListElement(Queue<string> lineQueue)
+        {
+            Dictionary<IDocumentElement, string> delimiterMap = new Dictionary<IDocumentElement, string>();
+            Cartridge<String> breakMethod = new Cartridge<string>();
+
+            ListContainerElement root;
             {
-                IDocumentElement element = new ParagraphElement(bodyBuilder.ToString());
-                documentElements.Add(element);
+                string line = lineQueue.Dequeue();
+                AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
+                Type type = syntax.InstanceType;
+                GroupCollection groups = syntax.Pattern.Match(line).Groups;
+                string delimiter = groups[1].Value;
+                string content = groups[2].Value;
+                root = type.GetConstructors()[0].Invoke(
+                    new object[] { content }) as ListContainerElement;
+                delimiterMap[root] = delimiter;
             }
 
-            return documentElements;
+            ListContainerElement beforeElement = root;
+
+            while (lineQueue.Count > 0)
+            {
+                string line = lineQueue.Peek();
+                AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
+                Type type = syntax.InstanceType;
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    breakMethod.Add(lineQueue.Dequeue());
+                    continue;
+                }
+
+                if (type == typeof(ParagraphElement))
+                {
+                    if (breakMethod.IsFilled)
+                    {
+                        break;
+                    }
+
+                    lineQueue.Dequeue();
+                    // beforeElement.Value += nextLine; 바로 윗 줄이 빈칸이 아니면 이전 요소에 옆으로 이어 붙인다.
+                }
+                else if (!type.IsSubclassOf(typeof(ListContainerElement)))
+                {
+                    break;
+                }
+                else
+                {
+                    GroupCollection groups = syntax.Pattern.Match(lineQueue.Dequeue()).Groups;
+                    string delimiter = groups[1].Value;
+                    string content = groups[2].Value;
+
+                    ListContainerElement e =
+                        type.GetConstructors()[0].Invoke(new object[] { content }) as ListContainerElement;
+                    delimiterMap.Add(e, delimiter);
+
+                    ListContainerElement current = beforeElement;
+
+                    while (true)
+                    {
+                        if (current.Parent == null)
+                        {
+                            beforeElement.AddChild(e);
+                            break;
+                        }
+
+                        if (delimiter.Equals(delimiterMap[current]))
+                        {
+                            current.AddChild(content);
+                            break;
+                        }
+
+                        current = current.Parent as ListContainerElement;
+                    }
+
+                    beforeElement = e;
+                }
+
+                breakMethod.Remove();
+            }
+
+            return root;
         }
 
         private IDocumentElement ParseBlockElement(Queue<string> lineQueue)
@@ -141,7 +224,7 @@ namespace DocumentParser.Parsers.Implementations
 
                     if (preDelimiterGroup.Value.Equals(postDelimiterGroup.Value))
                     {
-                        Parse(blockContent.ToString()).ForEach(e => block.Children.Add(e));
+                        Parse(blockContent.ToString()).ForEach(e => block.AddChild(e));
                         blockContent.Clear();
                         break;
                     }
@@ -154,7 +237,7 @@ namespace DocumentParser.Parsers.Implementations
             {
                 List<IDocumentElement> elements = Parse(blockContent.ToString());
                 blockContent.Clear();
-                elements.ForEach(e => block.Children.Add(e));
+                elements.ForEach(e => block.AddChild(e));
             }
 
             return block;
@@ -189,12 +272,12 @@ namespace DocumentParser.Parsers.Implementations
                 }
                 else if (syntax.InstanceType == typeof(SpecialBlockElement))
                 {
-                    Parse(contentBuilder.ToString()).ForEach(e => block.Children.Add(e));
+                    Parse(contentBuilder.ToString()).ForEach(e => block.AddChild(e));
                     break;
                 }
                 else if (syntax.InstanceType.IsSubclassOf(typeof(BlockElement)))
                 {
-                    block.Children.Add(ParseBlockElement(lineQueue));
+                    block.AddChild(ParseBlockElement(lineQueue));
                 }
                 else
                 {

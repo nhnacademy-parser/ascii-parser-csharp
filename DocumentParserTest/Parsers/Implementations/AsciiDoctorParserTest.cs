@@ -5,6 +5,7 @@ using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Blocks.Lists;
 using DocumentParser.Elements.Implementations.Inlines;
 using DocumentParser.Parsers;
 using DocumentParser.Parsers.Implementations;
@@ -78,8 +79,7 @@ public class AsciiDoctorParserTest
         List<IDocumentElement> output = _documentParser.Parse(input);
 
         Assert.NotNull(output);
-        Assert.True(output.Count == 1);
-        Assert.True(output[0] is AttributeEntryElement);
+        Assert.True(output.Count == 0);
     }
 
     [Fact]
@@ -90,8 +90,7 @@ public class AsciiDoctorParserTest
         List<IDocumentElement> output = _documentParser.Parse(input);
 
         Assert.NotNull(output);
-        Assert.True(output.Count == 1);
-        Assert.True(output[0] is AttributeEntryElement);
+        Assert.True(output.Count == 0);
     }
 
     [Fact]
@@ -101,7 +100,7 @@ public class AsciiDoctorParserTest
             "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
 
         List<IDocumentElement> output = _documentParser.Parse(input);
-        
+
         Assert.NotNull(output);
         Assert.True(output.Count == 2);
         Assert.True(output[1] is SideBarBlockElement);
@@ -174,9 +173,33 @@ public class AsciiDoctorParserTest
         Assert.True(output[0] is SpecialBlockElement);
         Assert.True(((output[0] as BlockElement)!).Children.Count == 1);
     }
-    
-    
 
+    [Fact]
+    void Parse_ListElement()
+    {
+        string input =
+            ".Unordered list title\n" +
+            "* list item 1\n" + // 1
+            "** nested list item\n" +
+            "*** nested nested list \n" +
+            "item 1\n" +
+            "\n" +
+            "*** nested nested list " +
+            "\n" +
+            "\n" +
+            "item 2" + // 2
+            "\n" +
+            "* list item 2"; // 3
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 3);
+        Assert.True(output[0] is ListContainerElement);
+        Assert.True((output[0] as ListContainerElement).Children.Count == 2);
+        Assert.True(output[1] is ParagraphElement);
+        Assert.True(output[2] is ListContainerElement);
+    }
 
     private static Stream GetStream(string filename)
     {

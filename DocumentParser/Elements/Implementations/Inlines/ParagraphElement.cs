@@ -1,3 +1,4 @@
+using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations.Inlines
@@ -15,5 +16,7 @@ namespace DocumentParser.Elements.Implementations.Inlines
         {
             throw new System.NotImplementedException();
         }
+
+        public ITree<IDocumentElement> Parent { get; set; }
     }
 }

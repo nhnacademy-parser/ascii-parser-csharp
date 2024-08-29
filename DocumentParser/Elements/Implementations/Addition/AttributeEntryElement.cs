@@ -1,3 +1,4 @@
+using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations.Addition
@@ -12,5 +13,7 @@ namespace DocumentParser.Elements.Implementations.Addition
         {
             throw new System.NotImplementedException();
         }
+
+        public ITree<IDocumentElement> Parent { get; set; }
     }
 }

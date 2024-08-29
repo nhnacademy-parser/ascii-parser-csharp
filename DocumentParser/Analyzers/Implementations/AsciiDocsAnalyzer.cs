@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using DocumentParser.DocumentSyntaxes;
+using DocumentParser.DocumentSyntaxes.implementations;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Inlines;

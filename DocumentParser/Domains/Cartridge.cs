@@ -18,7 +18,17 @@ namespace DocumentParser.Domain
             _item = item;
         }
 
-        
+        public void Add(T item)
+        {
+            try
+            {
+                TryAdd(item);
+            }
+            catch (InvalidOperationException ignore)
+            {
+            }
+        }
+
         public T TryGetItem()
         {
             if (!IsFilled)
@@ -28,6 +38,7 @@ namespace DocumentParser.Domain
 
             return _item;
         }
+
         public T TryRemove()
         {
             if (!IsFilled)
@@ -39,6 +50,19 @@ namespace DocumentParser.Domain
             _item = default;
 
             return item;
+        }
+
+        public T Remove()
+        {
+            try
+            {
+                return TryRemove();
+            }
+            catch (InvalidOperationException ignore)
+            {
+            }
+
+            return default;
         }
     }
 }

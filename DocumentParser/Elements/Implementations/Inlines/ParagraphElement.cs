@@ -5,9 +5,8 @@ namespace DocumentParser.Elements.Implementations.Inlines
 {
     public class ParagraphElement : IDocumentElement
     {
-        public ParagraphElement(string paragraph)
+        public ParagraphElement()
         {
-            Paragraph = paragraph;
         }
 
         public string Paragraph { get; set; }

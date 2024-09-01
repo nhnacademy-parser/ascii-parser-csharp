@@ -5,7 +5,10 @@ namespace DocumentParser.Elements.Implementations.Addition
 {
     public class AttributeEntryElement : IDocumentElement
     {
-        public AttributeEntryElement(string attribute)
+        public string Name { get; set; }
+        public string Value { get; set; }
+
+        public AttributeEntryElement()
         {
         }
 

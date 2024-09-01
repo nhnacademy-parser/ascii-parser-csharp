@@ -5,10 +5,6 @@ namespace DocumentParser.Elements.Implementations.Inlines
 {
     public class SectionTitleElement : IDocumentElement
     {
-        public SectionTitleElement(string title)
-        {
-            Title = title;
-        }
 
         public string Title { get; set; }
 

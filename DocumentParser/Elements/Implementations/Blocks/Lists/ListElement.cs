@@ -14,7 +14,7 @@ namespace DocumentParser.Elements.Implementations.Blocks.Lists
 
         public ListElement(string paragraph)
         {
-            Value = new ParagraphElement(paragraph);
+            Value = new ParagraphElement() { Paragraph = paragraph };
         }
 
         public object Accept(IDocumentVisitor visitor)

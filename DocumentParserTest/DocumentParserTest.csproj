@@ -31,4 +31,8 @@
   <ItemGroup>
     <None Remove="Resources\Asciidocs\header.adoc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\Asciidocs\template.adoc" />
+    <EmbeddedResource Include="Resources\Asciidocs\template.adoc" />
+  </ItemGroup>
 </Project>

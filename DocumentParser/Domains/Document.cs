@@ -18,7 +18,7 @@ namespace DocumentParser.Domain
         }
 
         public object Header { get; set; }
-        public object Body { get; set; }
+        public List<IDocumentElement> Body { get; set; }
         public object Footer { get; set; }
 
         public void Append(IDocumentElement element)

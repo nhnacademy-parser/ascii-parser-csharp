@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
 using DocumentParser.Elements.Implementations.Blocks.Lists;
+using DocumentParser.Elements.Implementations.Blocks.Singles;
 using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.DocumentSyntaxes.implementations
@@ -36,8 +37,8 @@ namespace DocumentParser.DocumentSyntaxes.implementations
 
         public IEnumerator<AsciiDocSyntax> GetEnumerator()
         {
-            yield return new AsciiDocSyntax("=", new Regex("={1,} +.*"), typeof(SectionTitleElement));
-            yield return new AsciiDocSyntax(":", new Regex(":"), typeof(AttributeEntryElement));
+            yield return new AsciiDocSyntax("=", new Regex("={1,} +(.*)"), typeof(SectionTitleElement));
+            yield return new AsciiDocSyntax(":", new Regex(":([^ ].+):(.*)"), typeof(AttributeEntryElement));
 
             // Block, Structural containers
 
@@ -57,7 +58,7 @@ namespace DocumentParser.DocumentSyntaxes.implementations
             yield return new AsciiDocSyntax("!", new Regex("(!={3,})+$|(\n.*)"), typeof(TableBlockElement));
 
 
-            yield return new AsciiDocSyntax(".", new Regex("^\\.[^ .]"), typeof(TitleElement));
+            yield return new AsciiDocSyntax(".", new Regex("^\\.([^ .])"), typeof(TitleElement));
             yield return new AsciiDocSyntax("[", new Regex("^\\[+(.*)+]"), typeof(SpecialBlockElement));
 
             yield return new AsciiDocSyntax(".", new Regex("(\\.{1,})+ (.*)"), typeof(OrderedListContainerElement));
@@ -80,7 +81,7 @@ namespace DocumentParser.DocumentSyntaxes.implementations
             //
             // yield return new AsciiDocSyntax(string.Empty, "footnote:\\[(.*)]", typeof(FootNoteElement));
 
-            yield return new AsciiDocSyntax(string.Empty, "", typeof(ParagraphElement));
+            yield return new AsciiDocSyntax(string.Empty, new Regex(".*"), typeof(ParagraphElement));
         }
 
         IEnumerator IEnumerable.GetEnumerator()

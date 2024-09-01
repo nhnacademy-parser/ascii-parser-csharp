@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Reflection;
+using DocumentParser.Domain;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
@@ -26,7 +27,7 @@ public class AsciiDoctorParserTest
     }
 
     [Fact]
-    void Parse_One_Paragraph()
+    private void Parse_One_Paragraph()
     {
         string input = "This is a basic AsciiDoc document.";
 
@@ -150,7 +151,20 @@ public class AsciiDoctorParserTest
     void Parse_Nesting_SameStructuralBlock()
     {
         string input =
-            "====\nHere are your options:\n\n.Red Pill\n[%collapsible]\n======\nEscape into the real world.\n======\n\n.Blue Pill\n[%collapsible]\n======\nLive within the simulated reality without want or fear.\n======\n====\n";
+            "====\n" +
+            "Here are your options:\n" +
+            "\n" +
+            ".Red Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Escape into the real world.\n" +
+            "======\n\n" +
+            ".Blue Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Live within the simulated reality without want or fear.\n" +
+            "======\n" +
+            "====\n";
 
         List<IDocumentElement> output = _documentParser.Parse(input);
 
@@ -164,7 +178,15 @@ public class AsciiDoctorParserTest
     void Parse_Nesting_SpecialBlock()
     {
         string input =
-            "[%collapsible]\n======\nEscape into the real world.\n======\n\n.Blue Pill\n[%collapsible]\n======\nLive within the simulated reality without want or fear.\n======";
+            "[%collapsible]\n" +
+            "======\n" +
+            "Escape into the real world.\n" +
+            "======\n\n" +
+            ".Blue Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Live within the simulated reality without want or fear.\n" +
+            "======";
 
         List<IDocumentElement> output = _documentParser.Parse(input);
 
@@ -201,10 +223,24 @@ public class AsciiDoctorParserTest
         Assert.True(output[2] is ListContainerElement);
     }
 
+    // [Fact]
+    void Parse_Adoc()
+    {
+        string filename = "DocumentParserTest.Resources.Asciidocs.template.adoc";
+
+        Stream stream = GetStream(filename);
+
+        IDocumentParser parser = new AsciiDoctorParser();
+        
+        Document document = parser.LoadFile(stream);
+        
+        Assert.NotNull(document);
+    }
+
     private static Stream GetStream(string filename)
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
-        Stream? stream = assembly.GetManifestResourceStream("DocumentParserTest.Resources.Asciidocs.template.adoc");
+        Stream? stream = assembly.GetManifestResourceStream(filename);
 
         Debug.Assert(stream != null, nameof(stream) + " != null");
         return stream;

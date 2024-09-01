@@ -1,20 +1,15 @@
 using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
-namespace DocumentParser.Elements.Implementations.Addition
+namespace DocumentParser.Elements.Implementations.Blocks.Singles
 {
-    public class TitleElement: IDocumentElement
+    public class TitleElement: SingleContainerBlockElement
     {
-        public TitleElement(string title) 
-        {
-            Title = title;
-        }
         public string Title { get; set; }
         public object Accept(IDocumentVisitor visitor)
         {
             throw new System.NotImplementedException();
         }
 
-        public ITree<IDocumentElement> Parent { get; set; }
     }
 }

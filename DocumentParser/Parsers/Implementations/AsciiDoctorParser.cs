@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using DocumentParser.Analyzers;
@@ -15,7 +16,10 @@ using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
 using DocumentParser.Elements.Implementations.Blocks.Lists;
+using DocumentParser.Elements.Implementations.Blocks.Singles;
 using DocumentParser.Elements.Implementations.Inlines;
+using DocumentParser.Factories;
+using DocumentParser.Factories.Implementations;
 
 namespace DocumentParser.Parsers.Implementations
 {
@@ -37,83 +41,143 @@ namespace DocumentParser.Parsers.Implementations
             throw new NotImplementedException();
         }
 
-        public Document LoadFile(Stream file)
+        public Document LoadFile(Stream stream)
         {
-            throw new NotImplementedException();
+            StreamReader streamReader = new StreamReader(stream);
+            Document document = new Document();
+            document.Body = Parse(streamReader.ReadToEnd());
+            return document;
         }
 
         public List<IDocumentElement> Parse(string context)
         {
-            List<IDocumentElement> documentElements = new List<IDocumentElement>();
+            IDocumentElementFactory factory = new AsciiDocElementFactory();
+            Stack<BlockElement> blockStack = new Stack<BlockElement>();
+            Queue<string> contextQueue = new Queue<string>(context.Split('\n'));
+            Queue<IDocumentElement> elements = new Queue<IDocumentElement>();
 
-            Queue<string> lineQueue = new Queue<string>(context.Split('\n'));
-            Cartridge<TitleElement> titleCartridge = new Cartridge<TitleElement>();
+            Dictionary<string, BlockElement> delimiterDictionary = new Dictionary<string, BlockElement>();
 
-            while (lineQueue.Count > 0)
+            while (contextQueue.Count > 0)
             {
-                string line = lineQueue.Peek();
-
-                if (string.IsNullOrWhiteSpace(line))
+                string line = contextQueue.Dequeue();
+                if (string.IsNullOrEmpty(line))
                 {
-                    lineQueue.Dequeue();
                     continue;
                 }
 
                 AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
                 Type type = syntax.InstanceType;
+                Regex regex = syntax.Pattern;
+                GroupCollection groups = regex.Match(line).Groups;
 
-                if (syntax.InstanceType == typeof(SpecialBlockElement))
+                IDocumentElement element = factory.Create(type, groups);
+
+                Cartridge<IDocumentElement> cartridge = new Cartridge<IDocumentElement>();
+                cartridge.Add(element);
+
+
+                if (element is BlockElement block)
                 {
-                    documentElements.Add(ParseSpecialBlock(lineQueue));
-                }
-                else if (syntax.InstanceType.IsSubclassOf(typeof(ListContainerElement)))
-                {
-                    documentElements.Add(ParseListElement(lineQueue));
-                }
-                else if (type.IsSubclassOf(typeof(BlockElement)))
-                {
-                    documentElements.Add(ParseBlockElement(lineQueue));
-                }
-                else if (syntax.InstanceType == typeof(SectionTitleElement))
-                {
-                    line = lineQueue.Dequeue();
-                    Group delimiterGroup = syntax.Pattern.Match(line).Groups[0];
-                    string sectionTitle = line.Substring(delimiterGroup.Index + delimiterGroup.Length);
-                    IDocumentElement element =
-                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
-                            { sectionTitle }) as IDocumentElement;
-                    documentElements.Add(element);
-                }
-                else if (syntax.InstanceType == typeof(AttributeEntryElement))
-                {
-                    line = lineQueue.Dequeue();
-                    StringBuilder attributeBuilder = new StringBuilder();
-                    attributeBuilder.Append(line);
-                    while (attributeBuilder.ToString().Trim().EndsWith(" \\"))
+                    string delimiter = groups[0].Value;
+
+                    // 구분자가 일치하는 블록이 있다면 닫는 행
+                    if (delimiterDictionary.ContainsKey(delimiter))
                     {
-                        attributeBuilder.Append(lineQueue.Dequeue());
+                        BlockElement blockElement = delimiterDictionary[delimiter];
+                        cartridge.Remove();
+                        // 열린 행까지 스택 pop
+                        while (blockStack.Count > 0)
+                        {
+                            BlockElement popBlock = blockStack.Pop();
+                            
+                            foreach (KeyValuePair<string, BlockElement> pair in delimiterDictionary)
+                            {
+                                if (pair.Value.Equals(popBlock))
+                                {
+                                    delimiterDictionary.Remove(pair.Key);
+                                    break;
+                                }
+                            }
+
+                            if (popBlock.Equals(blockElement))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (blockStack.Count > 0)
+                            {
+                                BlockElement blockElement = blockStack.Peek();
+                                blockElement.AddChild(cartridge.TryRemove());
+                                if (blockElement.IsFulled())
+                                {
+                                    blockStack.Pop();
+                                    
+                                    foreach (KeyValuePair<string, BlockElement> pair in delimiterDictionary)
+                                    {
+                                        if (pair.Value.Equals(blockElement))
+                                        {
+                                            delimiterDictionary.Remove(pair.Key);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                elements.Enqueue(cartridge.TryRemove());
+                            }
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        blockStack.Push(block);
+                        delimiterDictionary[delimiter] = block;
+                    }
+                }
+                else if (element is AttributeEntryElement attributeEntry)
+                {
+                    cartridge.Remove();
+                    while (line.EndsWith(" \\"))
+                    {
+                        line = line.Replace(" \\", "");
+                        line += " " + contextQueue.Dequeue();
                     }
 
-                    IDocumentElement element =
-                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
-                            { attributeBuilder.ToString() }) as IDocumentElement;
-                    // documentElements.Add(element);
+                    attributeEntry = factory.Create(type, regex.Match(line).Groups) as AttributeEntryElement;
+                    // 헤더에 저장
                 }
-                else if (syntax.InstanceType == typeof(TitleElement))
+
+                try
                 {
-                    line = lineQueue.Dequeue();
-                    TitleElement element =
-                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
-                            { line }) as TitleElement;
-                    // titleCartridge.TryAdd(element);
+                    if (blockStack.Count > 0)
+                    {
+                        BlockElement blockElement = blockStack.Peek();
+                        blockElement.AddChild(cartridge.TryRemove());
+                        if (blockElement.IsFulled())
+                        {
+                            blockStack.Pop();
+                        }
+                    }
+                    else
+                    {
+                        elements.Enqueue(cartridge.TryRemove());
+                    }
                 }
-                else
+                catch (InvalidOperationException e)
                 {
-                    documentElements.Add(new ParagraphElement(lineQueue.Dequeue()));
+                    Console.WriteLine(e);
                 }
             }
 
-            return documentElements;
+            return elements.ToList();
         }
 
         private IDocumentElement ParseListElement(Queue<string> lineQueue)
@@ -278,6 +342,7 @@ namespace DocumentParser.Parsers.Implementations
                 else if (syntax.InstanceType.IsSubclassOf(typeof(BlockElement)))
                 {
                     block.AddChild(ParseBlockElement(lineQueue));
+                    break;
                 }
                 else
                 {

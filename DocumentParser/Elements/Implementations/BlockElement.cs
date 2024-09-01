@@ -29,5 +29,10 @@ namespace DocumentParser.Elements.Implementations
             _children.Add(child);
             child.Parent = this;
         }
+
+        public virtual bool IsFulled()
+        {
+            return false;
+        }
     }
 }

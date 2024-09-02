@@ -17,5 +17,11 @@ namespace DocumentParser.Elements.Implementations.Inlines
         }
 
         public ITree<IDocumentElement> Parent { get; set; }
+
+        public override string ToString()
+        {
+            return "paragraph {" + Paragraph + "}";
+            
+        }
     }
 }

@@ -11,8 +11,10 @@ namespace DocumentParser.Elements.Implementations.Blocks.Singles
                 base.AddChild(child);
                 child.Parent = this;
             }
-
-            throw new InvalidOperationException("Cannot add child to container, Maybe Container is full.");
+            else
+            {
+                throw new InvalidOperationException("Cannot add child to container, Maybe Container is full.");
+            }
         }
 
         public override bool IsFulled()

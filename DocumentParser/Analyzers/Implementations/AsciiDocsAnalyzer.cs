@@ -66,7 +66,7 @@ namespace DocumentParser.Analyzers.Implementations
                 }
             }
 
-            return new AsciiDocSyntax(string.Empty, "", typeof(ParagraphElement));
+            return new AsciiDocSyntax(string.Empty, new Regex("(.*)"), typeof(ParagraphElement));
         }
     }
 }

@@ -5,6 +5,7 @@ using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Blocks.Lists;
 using DocumentParser.Elements.Implementations.Blocks.Singles;
 using DocumentParser.Elements.Implementations.Inlines;
 
@@ -41,9 +42,16 @@ namespace DocumentParser.Factories.Implementations
             {
                 title.Title = groups[1].Value;
             }
+            else if (element.GetType().IsSubclassOf(typeof(ListContainerElement)))
+            {
+                ListContainerElement listContainer = element as ListContainerElement;
+
+                string value = groups[2].Value;
+
+                listContainer.AddChild(value);
+            }
             else if (element is BlockElement block)
             {
-                
             }
             else
             {

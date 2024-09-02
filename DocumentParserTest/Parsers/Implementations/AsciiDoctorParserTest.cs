@@ -7,6 +7,7 @@ using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
 using DocumentParser.Elements.Implementations.Blocks;
 using DocumentParser.Elements.Implementations.Blocks.Lists;
+using DocumentParser.Elements.Implementations.Blocks.Singles;
 using DocumentParser.Elements.Implementations.Inlines;
 using DocumentParser.Parsers;
 using DocumentParser.Parsers.Implementations;
@@ -217,10 +218,41 @@ public class AsciiDoctorParserTest
 
         Assert.NotNull(output);
         Assert.True(output.Count == 3);
-        Assert.True(output[0] is ListContainerElement);
-        Assert.True((output[0] as ListContainerElement).Children.Count == 2);
+        Assert.True(output[0] is TitleElement);
+        Assert.True((output[0] as TitleElement).Children.Count == 1);
         Assert.True(output[1] is ParagraphElement);
         Assert.True(output[2] is ListContainerElement);
+    }
+    [Fact]
+    void Parse_OrderedListElement()
+    {
+        string input = 
+            ". ordered list item 1\n" +
+            ".. nested ordered list item 1 - 1\n" + 
+            "... nested nested ordered list item 1 - 1 - 1\n" + 
+            "... nested nested ordered list item 1 - 1 - 2\n" +
+            ".. nested ordered list item 1 - 2\n" +
+            "... nested nested ordered list item 1 - 2 - 1\n" + 
+            ". ordered list item 2\n" +
+            ". ordered list item 3\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+    }
+
+    [Fact]
+    void Table_Element()
+    {
+        string input = "===== Fourth level heading\n\n.Table title\n|===\n|Column heading 1 |Column heading 2\n\n|Column 1, row 1\n|Column 2, row 1\n\n|Column 1, row 2\n|Column 2, row 2\n|===\n";
+        
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[1] is TitleElement);
+        Assert.True(output[0] is SectionTitleElement);
     }
 
     // [Fact]
@@ -231,9 +263,9 @@ public class AsciiDoctorParserTest
         Stream stream = GetStream(filename);
 
         IDocumentParser parser = new AsciiDoctorParser();
-        
+
         Document document = parser.LoadFile(stream);
-        
+
         Assert.NotNull(document);
     }
 

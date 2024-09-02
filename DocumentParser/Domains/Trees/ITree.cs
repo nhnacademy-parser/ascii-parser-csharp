@@ -5,7 +5,7 @@ namespace DocumentParser.Domains.Trees
 {
     public interface ITree<T>
     {
-        ICollection<T> Children { get; }
+        IList<IDocumentElement> Children { get; }
         
         ITree<T> Parent { get; }
 

@@ -6,9 +6,14 @@ namespace DocumentParser.Elements.Implementations.Blocks.Lists
 {
     public class ListContainerElement : BlockElement
     {
-        public new void AddChild(IDocumentElement child)
+        public override void AddChild(IDocumentElement child)
         {
-            AddChild(new ListElement(child));
+            ListElement listElement = new ListElement();
+            listElement.Children.Add(child);
+            
+            child.Parent = this;
+            
+            AddChild(listElement);
         }
 
         public void AddChild(ListElement child)

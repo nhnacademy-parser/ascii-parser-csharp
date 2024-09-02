@@ -81,7 +81,7 @@ namespace DocumentParser.DocumentSyntaxes.implementations
             //
             // yield return new AsciiDocSyntax(string.Empty, "footnote:\\[(.*)]", typeof(FootNoteElement));
 
-            yield return new AsciiDocSyntax(string.Empty, new Regex(".*"), typeof(ParagraphElement));
+            yield return new AsciiDocSyntax(string.Empty, new Regex("(.*)"), typeof(ParagraphElement));
         }
 
         IEnumerator IEnumerable.GetEnumerator()

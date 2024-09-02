@@ -79,67 +79,125 @@ namespace DocumentParser.Parsers.Implementations
 
                 if (element is BlockElement block)
                 {
-                    string delimiter = groups[0].Value;
-
-                    // 구분자가 일치하는 블록이 있다면 닫는 행
-                    if (delimiterDictionary.ContainsKey(delimiter))
+                    if (block.GetType().IsSubclassOf(typeof(ListContainerElement)))
                     {
-                        BlockElement blockElement = delimiterDictionary[delimiter];
-                        cartridge.Remove();
-                        // 열린 행까지 스택 pop
-                        while (blockStack.Count > 0)
+                        Dictionary<BlockElement, string> delimiterMap = new Dictionary<BlockElement, string>();
+                        Cartridge<String> breakMethod = new Cartridge<string>();
+                        ListContainerElement beforeElement = block as ListContainerElement;
+                        delimiterMap.Add(block, groups[1].Value);
+
+                        while (contextQueue.Count > 0)
                         {
-                            BlockElement popBlock = blockStack.Pop();
-                            
-                            foreach (KeyValuePair<string, BlockElement> pair in delimiterDictionary)
+                            string subLine = contextQueue.Peek();
+                            AsciiDocSyntax subSyntax = _syntaxAnalyzer.Analyze(subLine) as AsciiDocSyntax;
+                            Type subType = subSyntax.InstanceType;
+
+                            if (string.IsNullOrWhiteSpace(subLine))
                             {
-                                if (pair.Value.Equals(popBlock))
-                                {
-                                    delimiterDictionary.Remove(pair.Key);
-                                    break;
-                                }
+                                breakMethod.Add(contextQueue.Dequeue());
+                                continue;
                             }
 
-                            if (popBlock.Equals(blockElement))
+                            if (subType == typeof(ParagraphElement))
+                            {
+                                if (breakMethod.IsFilled)
+                                {
+                                    break;
+                                }
+
+                                contextQueue.Dequeue();
+                                ((beforeElement.Children.Last() as ListElement).Value as ParagraphElement).Paragraph +=
+                                    subLine;
+                            }
+                            else if (!subType.IsSubclassOf(typeof(ListContainerElement)))
                             {
                                 break;
                             }
+                            else
+                            {
+                                GroupCollection subGroups = subSyntax.Pattern.Match(contextQueue.Dequeue()).Groups;
+                                string delimiter = subGroups[1].Value;
+                                string content = subGroups[2].Value;
+
+                                ListContainerElement subElement =
+                                    factory.Create(subType, subGroups) as ListContainerElement;
+
+                                delimiterMap.Add(subElement, delimiter);
+
+                                ListContainerElement current = beforeElement;
+
+                                while (true)
+                                {
+                                    if (delimiter.Equals(delimiterMap[current]))
+                                    {
+                                        current.AddChild(content);
+                                        subElement = current;
+                                        break;
+                                    }
+
+                                    if (current.Parent == null)
+                                    {
+                                        beforeElement.AddChild(subElement);
+                                        break;
+                                    }
+
+                                    current = current.Parent as ListContainerElement;
+                                }
+
+                                beforeElement = subElement;
+                            }
+
+                            breakMethod.Remove();
                         }
                     }
                     else
                     {
-                        try
+                        string delimiter = groups[0].Value;
+
+                        if (delimiterDictionary.ContainsKey(delimiter)) // 구분자가 일치하는 블록이 있다면 닫는 행
                         {
-                            if (blockStack.Count > 0)
+                            BlockElement blockElement = delimiterDictionary[delimiter];
+                            cartridge.Remove();
+                            // 열린 행까지 스택 pop
+                            while (blockStack.Count > 0)
                             {
-                                BlockElement blockElement = blockStack.Peek();
-                                blockElement.AddChild(cartridge.TryRemove());
-                                if (blockElement.IsFulled())
+                                BlockElement popBlock = blockStack.Pop();
+                                RemoveDictionary(delimiterDictionary, blockElement);
+
+                                if (popBlock.Equals(blockElement))
                                 {
-                                    blockStack.Pop();
-                                    
-                                    foreach (KeyValuePair<string, BlockElement> pair in delimiterDictionary)
-                                    {
-                                        if (pair.Value.Equals(blockElement))
-                                        {
-                                            delimiterDictionary.Remove(pair.Key);
-                                            break;
-                                        }
-                                    }
+                                    break;
                                 }
                             }
-                            else
-                            {
-                                elements.Enqueue(cartridge.TryRemove());
-                            }
                         }
-                        catch (InvalidOperationException e)
+                        else
                         {
-                            Console.WriteLine(e);
-                        }
+                            try
+                            {
+                                if (blockStack.Count > 0)
+                                {
+                                    BlockElement blockElement = blockStack.Peek();
+                                    blockElement.AddChild(cartridge.TryRemove());
 
-                        blockStack.Push(block);
-                        delimiterDictionary[delimiter] = block;
+                                    if (blockElement.IsFulled())
+                                    {
+                                        blockStack.Pop();
+
+                                        RemoveDictionary(delimiterDictionary, blockElement);
+                                    }
+                                }
+                                else
+                                {
+                                    elements.Enqueue(cartridge.TryRemove());
+                                }
+                            }
+                            catch (InvalidOperationException ignore)
+                            {
+                            }
+
+                            blockStack.Push(block);
+                            delimiterDictionary[delimiter] = block;
+                        }
                     }
                 }
                 else if (element is AttributeEntryElement attributeEntry)
@@ -180,177 +238,14 @@ namespace DocumentParser.Parsers.Implementations
             return elements.ToList();
         }
 
-        private IDocumentElement ParseListElement(Queue<string> lineQueue)
+        private void RemoveDictionary(Dictionary<string, BlockElement> delimiterDictionary,
+            BlockElement blockElement)
         {
-            Dictionary<IDocumentElement, string> delimiterMap = new Dictionary<IDocumentElement, string>();
-            Cartridge<String> breakMethod = new Cartridge<string>();
-
-            ListContainerElement root;
+            foreach (var pair in delimiterDictionary.Where(pair => pair.Value.Equals(blockElement)))
             {
-                string line = lineQueue.Dequeue();
-                AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
-                Type type = syntax.InstanceType;
-                GroupCollection groups = syntax.Pattern.Match(line).Groups;
-                string delimiter = groups[1].Value;
-                string content = groups[2].Value;
-                root = type.GetConstructors()[0].Invoke(
-                    new object[] { content }) as ListContainerElement;
-                delimiterMap[root] = delimiter;
+                delimiterDictionary.Remove(pair.Key);
+                break;
             }
-
-            ListContainerElement beforeElement = root;
-
-            while (lineQueue.Count > 0)
-            {
-                string line = lineQueue.Peek();
-                AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
-                Type type = syntax.InstanceType;
-
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    breakMethod.Add(lineQueue.Dequeue());
-                    continue;
-                }
-
-                if (type == typeof(ParagraphElement))
-                {
-                    if (breakMethod.IsFilled)
-                    {
-                        break;
-                    }
-
-                    lineQueue.Dequeue();
-                    // beforeElement.Value += nextLine; 바로 윗 줄이 빈칸이 아니면 이전 요소에 옆으로 이어 붙인다.
-                }
-                else if (!type.IsSubclassOf(typeof(ListContainerElement)))
-                {
-                    break;
-                }
-                else
-                {
-                    GroupCollection groups = syntax.Pattern.Match(lineQueue.Dequeue()).Groups;
-                    string delimiter = groups[1].Value;
-                    string content = groups[2].Value;
-
-                    ListContainerElement e =
-                        type.GetConstructors()[0].Invoke(new object[] { content }) as ListContainerElement;
-                    delimiterMap.Add(e, delimiter);
-
-                    ListContainerElement current = beforeElement;
-
-                    while (true)
-                    {
-                        if (current.Parent == null)
-                        {
-                            beforeElement.AddChild(e);
-                            break;
-                        }
-
-                        if (delimiter.Equals(delimiterMap[current]))
-                        {
-                            current.AddChild(content);
-                            break;
-                        }
-
-                        current = current.Parent as ListContainerElement;
-                    }
-
-                    beforeElement = e;
-                }
-
-                breakMethod.Remove();
-            }
-
-            return root;
-        }
-
-        private IDocumentElement ParseBlockElement(Queue<string> lineQueue)
-        {
-            string line = lineQueue.Dequeue();
-            AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
-            Type type = syntax.InstanceType;
-            BlockElement block = type.GetConstructors()[0].Invoke(null) as BlockElement;
-
-            StringBuilder blockContent = new StringBuilder();
-
-            Group preDelimiterGroup = syntax.Pattern.Match(line).Groups[0];
-
-            while (lineQueue.Count > 0)
-            {
-                line = lineQueue.Dequeue();
-
-                AsciiDocSyntax postSyntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
-
-                if (postSyntax.InstanceType.IsSubclassOf(typeof(BlockElement)))
-                {
-                    Group postDelimiterGroup
-                        = syntax.Pattern.Match(line).Groups[0];
-
-                    if (preDelimiterGroup.Value.Equals(postDelimiterGroup.Value))
-                    {
-                        Parse(blockContent.ToString()).ForEach(e => block.AddChild(e));
-                        blockContent.Clear();
-                        break;
-                    }
-                }
-
-                blockContent.Append(line).Append('\n');
-            }
-
-            if (blockContent.Length > 0)
-            {
-                List<IDocumentElement> elements = Parse(blockContent.ToString());
-                blockContent.Clear();
-                elements.ForEach(e => block.AddChild(e));
-            }
-
-            return block;
-        }
-
-        private IDocumentElement ParseSpecialBlock(Queue<string> lineQueue)
-        {
-            string line = lineQueue.Dequeue(); // block type
-            Console.WriteLine("Special block parsing Start, block type is " + line);
-            AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
-            Type type = syntax.InstanceType;
-            BlockElement block = type.GetConstructors()[0].Invoke(null) as BlockElement;
-
-            StringBuilder contentBuilder = new StringBuilder();
-
-            while (lineQueue.Count > 0)
-            {
-                string subLine = lineQueue.Peek();
-                syntax = _syntaxAnalyzer.Analyze(subLine) as AsciiDocSyntax;
-
-                if (block.Children.Count > 0)
-                {
-                    break;
-                }
-                else if (syntax.InstanceType == typeof(TitleElement))
-                {
-                    TitleElement title =
-                        syntax.InstanceType.GetConstructors()[0].Invoke(new object[]
-                            { lineQueue.Dequeue() }) as TitleElement;
-                    // titleCartridge.TryAdd(title);
-                    continue;
-                }
-                else if (syntax.InstanceType == typeof(SpecialBlockElement))
-                {
-                    Parse(contentBuilder.ToString()).ForEach(e => block.AddChild(e));
-                    break;
-                }
-                else if (syntax.InstanceType.IsSubclassOf(typeof(BlockElement)))
-                {
-                    block.AddChild(ParseBlockElement(lineQueue));
-                    break;
-                }
-                else
-                {
-                    contentBuilder.Append(lineQueue.Dequeue());
-                }
-            }
-
-            return block;
         }
     }
 }

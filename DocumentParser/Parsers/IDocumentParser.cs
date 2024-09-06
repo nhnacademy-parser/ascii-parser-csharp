@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using DocumentParser.Domain;
-using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements;
 
 namespace DocumentParser.Parsers
 {
     public interface IDocumentParser
     {
+        
+        
         Document LoadFile(string filePath);
-        Document LoadFile(FileStream file);
+        Document LoadFile(Stream file);
 
-        DocsElement Parse(string document);
+        List<IDocumentElement> Parse(string context);
     }
 }
 

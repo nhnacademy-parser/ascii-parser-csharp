@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using DocumentParser.Elements;
-using DocumentParser.Elements.Implementations;
 using DocumentParser.Visitors.implementations;
 
 namespace DocumentParser.Domain
@@ -20,25 +18,12 @@ namespace DocumentParser.Domain
         }
 
         public object Header { get; set; }
-        public object Body { get; set; }
+        public List<IDocumentElement> Body { get; set; }
         public object Footer { get; set; }
 
         public void Append(IDocumentElement element)
         {
             _elements.Add(element);
-        }
-        
-        public string Convert(HtmlConverter htmlConverter)
-        {
-            
-            StringBuilder sb = new StringBuilder();
-
-            foreach (IDocumentElement element in this)
-            {
-                sb.Append(element.Accept(htmlConverter));
-            }
-            
-            return sb.ToString();
         }
 
         public IEnumerator<IDocumentElement> GetEnumerator()

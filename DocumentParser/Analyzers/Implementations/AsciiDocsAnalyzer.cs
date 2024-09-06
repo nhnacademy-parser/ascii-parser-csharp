@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using DocumentParser.DocumentSyntaxes;
+using DocumentParser.DocumentSyntaxes.implementations;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.Analyzers.Implementations
 {
@@ -37,36 +39,19 @@ namespace DocumentParser.Analyzers.Implementations
 
         public IDocumentSyntax Analyze(string context)
         {
-            string index = context[..1];
-            
+            string index = context.Length == 0 ? "" : context[..1];
+
             if (_syntaxMap.ContainsKey(index))
             {
-                List<AsciiDocSyntax> list = _syntaxMap.GetValueOrDefault(index);
-
-                foreach (AsciiDocSyntax syntax in list)
+                List<AsciiDocSyntax> list = _syntaxMap[index];
+                AsciiDocSyntax s = list.Find(s => s.Pattern.IsMatch(context));
+                if (s != null)
                 {
-                    Match match = syntax.Pattern.Match(context);
-
-                    if (match.Success)
-                    {
-                        return syntax;
-                    }
-                }
-            }
-            else
-            {
-                foreach (AsciiDocSyntax syntax in _inlineSyntax)
-                {
-                    Match match = syntax.Pattern.Match(context);
-
-                    if (match.Success)
-                    {
-                        return syntax;
-                    }
+                    return s;
                 }
             }
 
-            return new AsciiDocSyntax(string.Empty, string.Empty, typeof(PlainTextElement));
+            return _inlineSyntax.Find(s => s.Pattern.IsMatch(context));
         }
     }
 }

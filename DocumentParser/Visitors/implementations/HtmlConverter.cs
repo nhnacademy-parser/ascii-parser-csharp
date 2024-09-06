@@ -1,37 +1,149 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DocumentParser.Domain.Html;
+using DocumentParser.Domain;
+using DocumentParser.Domains.Htmls;
+using DocumentParser.Domains.Nodes;
+using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Blocks.Lists;
+using DocumentParser.Elements.Implementations.Blocks.Singles;
+using DocumentParser.Elements.Implementations.Inlines;
 
 namespace DocumentParser.Visitors.implementations
 {
     public class HtmlConverter : IDocumentVisitor
     {
-        private readonly List<FootNoteElement> _footNoteElements = new List<FootNoteElement>();
-
-        public string Visit(DocsElement element)
+        public string Visit(IDocumentElement element)
         {
-            return element.ToString();
+            return HtmlTag.TagBlock("p", element.ToString());
         }
 
-        public string Visit(AnchorElement element)
+        public string Visit(LineElement element)
         {
-            return HtmlTag.TagBlock("a", element.AltText, "href", element.Href);
+            return HtmlTag.TagBlock("span", element.Value);
+        }
+
+        public string Visit(InlineElement element)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            LineElement line = element.Children[0] as LineElement;
+
+            foreach (LineElement n in line)
+            {
+                builder.Append((n as IDocumentElement).Accept(this));
+            }
+
+            return HtmlTag.TagBlock("p", builder.ToString());
         }
 
         public string Visit(BoldTextElement element)
         {
+            return HtmlTag.TagBlock("strong", element.BoldText);
+        }
+
+        public string Visit(ItalicTextElement element)
+        {
+            return HtmlTag.TagBlock("em", element.ItalicText);
+        }
+
+        public string Visit(ParagraphElement element)
+        {
+            return element.Paragraph;
+        }
+
+        public string Visit(SectionTitleElement element)
+        {
+            string id = "_" + element.Title.ToLower().Replace(" ", "_");
+            string tagName = "h" + element.Level;
+
+            return HtmlTag.TagBlock(tagName, element.Title,
+                list =>
+                {
+                    list.Add(new TagAttribute("id", id));
+                    list.Add(new TagAttribute("class", "title"));
+                });
+        }
+
+        public string Visit(QuotationBlockElement element)
+        {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append(HtmlTag.TagBlock("strong", element.BoldText));
-
-            if (element.Next != null)
+            foreach (IDocumentElement e in element.Children)
             {
-                builder.Append(element.Next.Accept(this));
+                if (e is InlineElement inline)
+                {
+                    builder.Append(inline.Value.Accept(this)).Append(" ");
+                }
+                else
+                {
+                    builder.Append(e.Accept(this)).Append(" ");
+                }
             }
 
-            return builder.ToString();
+            return HtmlTag.TagBlock("blockqute",
+                HtmlTag.TagBlock("span", builder.ToString()), "class", "blockquote");
+        }
+
+        public string Visit(ListElement element)
+        {
+            return HtmlTag.TagBlock("li", element.Value.Accept(this));
+        }
+
+        public string Visit(ListContainerElement element)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (IDocumentElement e in element.Children)
+            {
+                builder.Append(e.Accept(this));
+            }
+
+            return HtmlTag.TagBlock("ul", builder.ToString());
+        }
+
+        public string Visit(TitleElement element)
+        {
+            string content = HtmlTag.TagBlock("div", element.Value.Accept(this));
+            string title =
+                HtmlTag.TagBlock("em",
+                    HtmlTag.TagBlock("strong", element.Title, "class", "title"));
+
+            return HtmlTag.TagBlock("div", title + content, "class", "title");
+        }
+
+        public string Visit(BlockElement element)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (IDocumentElement e in element.Children)
+            {
+                builder.Append(e.Accept(this));
+            }
+
+            return HtmlTag.TagBlock("div", builder.ToString());
+        }
+
+        public string Visit(ImageReferenceElement element)
+        {
+            return HtmlTag.TagBlock("img", string.Empty,
+                list =>
+                {
+                    list.Add(new TagAttribute("href", element.ImageReference));
+                    list.Add(new TagAttribute("alt", element.AltText));
+                });
+        }
+
+        public string Visit(AnchorElement element)
+        {
+            return HtmlTag.TagBlock("a", element.AltText, "href", element.Reference);
+        }
+
+        public string Visit(CrossReferenceElement element)
+        {
+            return HtmlTag.TagBlock("a", element.AltText, "href", "#" + element.CrossReference);
         }
 
         public string Visit(CommentElement element)
@@ -39,213 +151,13 @@ namespace DocumentParser.Visitors.implementations
             return "<!--" + element.Comment + "-->";
         }
 
-        public string Visit(CrossReferenceElement element)
-        {
-            return HtmlTag.TagBlock("a", element.AltText, "href", "#" + element.RefTarget);
-        }
-
-
-        public string Visit(ExampleBlockElement element)
+        public string Convert(Document document)
         {
             StringBuilder builder = new StringBuilder();
 
-            foreach (DocsElement child in element.Children)
+            foreach (IDocumentElement element in document.Body)
             {
-                builder.Append(HtmlTag.TagBlock("p", child.Accept(this).ToString()));
-            }
-
-            return HtmlTag.TagBlock("div", builder.ToString());
-        }
-
-        public string Visit(FootNoteElement element)
-        {
-            _footNoteElements.Add(element);
-            StringBuilder builder = new StringBuilder();
-
-            String footnoteId = "_footnoteref_" + _footNoteElements.Count;
-
-            builder.Append("[")
-                .Append(HtmlTag.TagBlock("a", _footNoteElements.Count.ToString(),
-                    new KeyValuePair<string, string>("id", footnoteId),
-                    new KeyValuePair<string, string>("class", "footnote"),
-                    new KeyValuePair<string, string>("href", "#" + footnoteId)))
-                .Append("]");
-
-            return HtmlTag.TagBlock("sup", builder.ToString(), "class", "footnote");
-        }
-
-        public string Visit(HeadingElement element)
-        {
-            string tag = "h" + element.Level;
-            string id = element.Heading.Replace(" ", "_").ToLower();
-
-            return HtmlTag.TagBlock(tag, element.Heading, "id", id);
-        }
-
-        public string Visit(ImageReferenceElement referenceElement)
-        {
-            return HtmlTag.TagBlock("img", string.Empty,
-                new KeyValuePair<string, string>("src", referenceElement.Href),
-                new KeyValuePair<string, string>("alt", referenceElement.AltText)
-            );
-        }
-
-        public string Visit(ItalicTextElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            if (element.Next != null)
-            {
-                builder.Append(element.Next.Accept(this));
-            }
-
-            return HtmlTag.TagBlock("em", element.ItalicText) + builder;
-        }
-
-        public string Visit(ListingBlockElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            foreach (DocsElement child in element.Children)
-            {
-                if (child is InlineElement { Value: DocsElement inlineElement })
-                {
-                    builder.Append(inlineElement.Accept(this)).Append('\n');
-                }
-                else
-                {
-                    builder.Append(child.Accept(this)).Append('\n');
-                }
-            }
-
-            return
-                HtmlTag.TagBlock("div",
-                    HtmlTag.TagBlock("pre", builder.ToString())
-                );
-        }
-
-        public string Visit(InlineElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            if (element.Value is DocsElement child)
-            {
-                builder.Append(child.Accept(this));
-            }
-
-            return HtmlTag.TagBlock("p", builder.ToString());
-        }
-
-        public string Visit(OrderedListElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-            builder.Append(element.Value);
-
-            foreach (DocsElement docs in element.Children)
-            {
-                builder.Append(docs.Accept(this));
-            }
-
-            return
-                HtmlTag.TagBlock("ol",
-                    HtmlTag.TagBlock("li", builder.ToString()));
-        }
-
-        public string Visit(QuotationElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            foreach (DocsElement child in element.Children)
-            {
-                builder.Append(child.Value);
-            }
-
-            return
-                HtmlTag.TagBlock("blockquote",
-                    HtmlTag.TagBlock("div",
-                        HtmlTag.TagBlock("p", builder.ToString()), "class", "paragraph"));
-        }
-
-        public string Visit(SideBarElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            foreach (DocsElement child in element.Children)
-            {
-                builder.Append(HtmlTag.TagBlock("p", child.Value.ToString()));
-            }
-
-
-            return HtmlTag.TagBlock("div", builder.ToString(), "class", "side-bar");
-        }
-
-        public string Visit(TableElement element)
-        {
-            StringBuilder table = new StringBuilder();
-
-
-            StringBuilder columnHeading = new StringBuilder();
-            foreach (String heading in element.ColumnHeading)
-            {
-                columnHeading.Append(HtmlTag.TagBlock("th", heading));
-            }
-
-            table.Append(
-                HtmlTag.TagBlock("thead",
-                    HtmlTag.TagBlock("tr", columnHeading.ToString()))
-            );
-
-
-            StringBuilder tr = new StringBuilder();
-
-            foreach (String[] row in element.Rows)
-            {
-                StringBuilder td = new StringBuilder();
-                foreach (String column in row)
-                {
-                    td.Append(HtmlTag.TagBlock("td", column));
-                }
-
-                tr.Append(HtmlTag.TagBlock("tr", td.ToString()));
-            }
-
-            table.Append(
-                HtmlTag.TagBlock("tbody",
-                    HtmlTag.TagBlock("tr", tr.ToString()))
-            );
-
-            return HtmlTag.TagBlock("table", table.ToString());
-        }
-
-        public string Visit(TitleElement element)
-        {
-            return HtmlTag.TagBlock("div", element.Title, "class", "title");
-        }
-
-        public string Visit(UnOrderedListElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-            builder.Append(element.Value);
-
-            foreach (DocsElement docs in element.Children)
-            {
-                builder.Append(docs.Accept(this));
-            }
-
-            return
-                HtmlTag.TagBlock("ul",
-                    HtmlTag.TagBlock("li", builder.ToString()));
-        }
-
-        public string Visit(PlainTextElement element)
-        {
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append(element.Value);
-
-            if (element.Next != null)
-            {
-                builder.Append(element.Next.Accept(this));
+                builder.Append(element.Accept(this));
             }
 
             return builder.ToString();

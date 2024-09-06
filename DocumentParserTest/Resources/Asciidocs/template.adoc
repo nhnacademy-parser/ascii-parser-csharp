@@ -1,9 +1,9 @@
 = AsciiDoc Article Title
 Firstname Lastname <author@asciidoctor.org>
 3.0, July 29, 2022: AsciiDoc article template
-
+:toc:
 :icons: font
-
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
 Content entered directly below the header but before the first section heading is called the preamble.
 
@@ -61,13 +61,13 @@ Listing block content is commonly used to preserve code input.
 
 ====== Fifth level heading
 
-[quote,firstname lastname,movie title]
+[quote, firstname lastname, movie title]
 ____
 I am a block quote or a prose excerpt.
 I am subject to normal substitutions.
 ____
 
-[verse,firstname lastname,poem title and more]
+[verse, firstname lastname, poem title and more]
 ____
 I am a verse block.
   Indents and endlines are preserved in verse blocks.
@@ -81,11 +81,6 @@ TIP: There are five admonition labels: Tip, Note, Important, Caution and Warning
 
 . ordered list item
 .. nested ordered list item
-* 1
-** 2
-. 1233123123
-*** 123123123213
-
 . ordered list item
 
 The text at the end of this sentence is cross referenced to <<_third_level_heading,the third level heading>>

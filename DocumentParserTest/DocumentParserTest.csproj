@@ -27,12 +27,14 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DocumentParser\DocumentParser.csproj" />
-<!--    <ProjectReference Include="DocumentParserTest.csproj" />-->
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Asciidocs\footer.adoc" />
-    <EmbeddedResource Include="Resources\Asciidocs\template.adoc" />
     <None Remove="Resources\Asciidocs\header.adoc" />
-    <EmbeddedResource Include="Resources\Asciidocs\header.adoc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\Asciidocs\template.adoc" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Asciidocs\template.adoc" />
   </ItemGroup>
 </Project>

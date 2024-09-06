@@ -1,261 +1,330 @@
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Reflection;
 using DocumentParser.Domain;
+using DocumentParser.Domains.Trees;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
+using DocumentParser.Elements.Implementations.Addition;
+using DocumentParser.Elements.Implementations.Blocks;
+using DocumentParser.Elements.Implementations.Blocks.Lists;
+using DocumentParser.Elements.Implementations.Blocks.Singles;
+using DocumentParser.Elements.Implementations.Inlines;
 using DocumentParser.Parsers;
 using DocumentParser.Parsers.Implementations;
 using JetBrains.Annotations;
+using Xunit.Abstractions;
 
 namespace DocumentParserTest.Parsers.Implementations;
 
 [TestSubject(typeof(IDocumentParser))]
 public class AsciiDoctorParserTest
 {
-    private readonly IDocumentParser _documentParser = new AsciiDocsParser();
+    private readonly ITestOutputHelper _testOutputHelper;
+    private readonly IDocumentParser _documentParser = new AsciiDoctorParser();
+
+    public AsciiDoctorParserTest(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
+    [Fact]
+    private void Parse_One_Paragraph()
+    {
+        string input = "This is a basic AsciiDoc document.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+    }
+
+    [Fact]
+    void Parse_Two_Paragraphs()
+    {
+        string input = "This is a basic AsciiDoc document.\n\nThis document contains two paragraphs.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+    }
+
+    [Fact]
+    void Parse_Three_Paragraphs()
+    {
+        string input =
+            "= Document Title\n:reproducible:\n\nThis is a basic AsciiDoc document by {author}.\n\nThis document contains two paragraphs.\nIt also has a header that specifies the document title.\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 4);
+    }
+
+    [Fact]
+    void Parse_Section()
+    {
+        string input = "== Section Title";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is SectionTitleElement);
+    }
+
+    [Fact]
+    void Parse_AttributeEntry()
+    {
+        string input = ":name: value";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 0);
+    }
+
+    [Fact]
+    void Parse_AttributeEntry_Extends()
+    {
+        string input = ":name: value \\\nmore value";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 0);
+    }
+
+    [Fact]
+    void Parse_SidebarElement()
+    {
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[1] is SideBarBlockElement);
+    }
+
+    [Fact]
+    void Parse_SidebarElement_second()
+    {
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.\n****\nadditional paragraphs.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 3);
+        Assert.True(output[1] is SideBarBlockElement);
+    }
+
+    [Fact]
+    void Parse_SidebarElement_unclosed()
+    {
+        string input =
+            "Text in your document.\n\n****\nThis is content in a sidebar block.\n\nimage::name.png[]\n\nThis is more content in the sidebar block.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[1] is SideBarBlockElement);
+    }
+
+    [Fact]
+    void Parse_Nesting_Block()
+    {
+        string input =
+            "====\nHere's a sample AsciiDoc document:\n\n----\n= Document Title\nAuthor Name\n\nContent goes here.\n----\n\nThe document header is useful, but not required.\n====";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is ExampleBlockElement);
+        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+    }
+
+    [Fact]
+    void Parse_Nesting_SameStructuralBlock()
+    {
+        string input =
+            "====\n" +
+            "Here are your options:\n" +
+            "\n" +
+            ".Red Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Escape into the real world.\n" +
+            "======\n\n" +
+            ".Blue Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Live within the simulated reality without want or fear.\n" +
+            "======\n" +
+            "====\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.True(output[0] is ExampleBlockElement);
+        Assert.True(((output[0] as ExampleBlockElement)!).Children.Count == 3);
+    }
+
+    [Fact]
+    void Parse_Nesting_SpecialBlock()
+    {
+        string input =
+            "[%collapsible]\n" +
+            "======\n" +
+            "Escape into the real world.\n" +
+            "======\n\n" +
+            ".Blue Pill\n" +
+            "[%collapsible]\n" +
+            "======\n" +
+            "Live within the simulated reality without want or fear.\n" +
+            "======";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[0] is SpecialBlockElement);
+        Assert.True(((output[0] as BlockElement)!).Children.Count == 1);
+    }
+
+    [Fact]
+    void Parse_ListElement()
+    {
+        string input =
+            ".Unordered list title\n" +
+            "* list item 1\n" + // 1
+            "** nested list item\n" +
+            "*** nested nested list \n" +
+            "item 1\n" +
+            "\n" +
+            "*** nested nested list " +
+            "\n" +
+            "\n" +
+            "item 2" + // 2
+            "\n" +
+            "* list item 2"; // 3
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 3);
+        Assert.True(output[0] is TitleElement);
+        Assert.True((output[0] as TitleElement).Children.Count == 1);
+        Assert.Equal(typeof(InlineElement), output[1].GetType());
+        Assert.True(output[2] is ListContainerElement);
+    }
+
+    [Fact]
+    void Parse_OrderedListElement()
+    {
+        string input =
+            ". ordered list item 1\n" +
+            ".. nested ordered list item 1 - 1\n" +
+            "... nested nested ordered list item 1 - 1 - 1\n" +
+            "... nested nested ordered list item 1 - 1 - 2\n" +
+            ".. nested ordered list item 1 - 2\n" +
+            "... nested nested ordered list item 1 - 2 - 1\n" +
+            ". ordered list item 2\n" +
+            ". ordered list item 3\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+    }
+
+    [Fact]
+    void Table_Element()
+    {
+        string input =
+            "===== Fourth level heading\n\n.Table title\n|===\n|Column heading 1 |Column heading 2\n\n|Column 1, row 1\n|Column 2, row 1\n\n|Column 1, row 2\n|Column 2, row 2\n|===\n";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 2);
+        Assert.True(output[1] is TitleElement);
+        Assert.True(output[0] is SectionTitleElement);
+    }
+
+    [Fact]
+    void Parse_ImageReference()
+    {
+        string input =
+            ".Image caption\nimage::image-file-name.png[I am the image alt text.]";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal("image-file-name.png",
+            (((output[0] as TitleElement)?.Value as InlineElement)?.Children[0] as ImageReferenceElement)?.ImageReference);
+        Assert.Equal("I am the image alt text.",
+            (((output[0] as TitleElement)?.Value as InlineElement)?.Children[0] as ImageReferenceElement)?.AltText);
+    }
+
+    [Fact]
+    void Parse_Comment()
+    {
+        string input =
+            "///This is Comment, I am a comment and won't be rendered.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal(typeof(InlineElement), output[0].GetType());
+        Assert.Equal("/This is Comment, I am a comment and won't be rendered.", ((output[0] as InlineElement).Children[0] as CommentElement)?.Comment);
+    }
+
+    [Fact]
+    void Parse_CrossReference()
+    {
+        string input =
+            "<<_third_level_heading,the third level heading>>";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal(typeof(InlineElement), output[0].GetType());
+        Assert.Equal("_third_level_heading",
+            ((output[0] as InlineElement)?.Children[0] as CrossReferenceElement)?.CrossReference);
+        Assert.Equal("the third level heading",
+            ((output[0] as InlineElement)?.Children[0] as CrossReferenceElement)?.AltText);
+    }   
+
+    [Fact]
+    void Parse_Adoc()
+    {
+        string filename = "DocumentParserTest.Resources.Asciidocs.template.adoc";
+
+        Stream stream = GetStream(filename);
+
+        IDocumentParser parser = new AsciiDoctorParser();
+
+        Document document = parser.LoadFile(stream);
+
+        Assert.NotNull(document);
+    }
 
     private static Stream GetStream(string filename)
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
-        Stream? stream = assembly.GetManifestResourceStream("DocumentParserTest.Resources.Asciidocs.template.adoc");
+        Stream? stream = assembly.GetManifestResourceStream(filename);
 
         Debug.Assert(stream != null, nameof(stream) + " != null");
         return stream;
     }
-
-    [Fact]
-    public void ParseHeader()
-    {
-        Stream reader = GetStream("DocumentParserTest.Resources.Asciidocs.header.adoc");
-
-        Document document = _documentParser.LoadFile(reader);
-
-        Assert.NotNull(document);
-        Assert.NotNull(document.Header);
-    }
-
-    [Fact]
-    public void ParseBody()
-    {
-        Stream reader = GetStream("DocumentParserTest.Resources.Asciidocs.header.adoc");
-
-        Document document = _documentParser.LoadFile(reader);
-
-        Assert.NotNull(document);
-        Assert.NotNull(document.Body);
-    }
-
-    [Fact]
-    public void ParseFooter()
-    {
-        Stream reader = GetStream("DocumentParserTest.Resources.Asciidocs.footer.adoc");
-
-        Document document = _documentParser.LoadFile(reader);
-
-        Assert.NotNull(document);
-        Assert.NotNull(document.Footer);
-    }
-
-    [Fact]
-    public void ParseHeading()
-    {
-        IDocumentElement element = _documentParser.Parse("= AsciiDoc Article Title");
-
-        Assert.NotNull(element);
-        Assert.True(element is HeadingElement);
-    }
-
-    [Fact]
-    public void ParseTitle()
-    {
-        IDocumentElement element = _documentParser.Parse(".title");
-
-        Assert.NotNull(element);
-        Assert.True(element is TitleElement);
-    }
-
-    [Fact]
-    public void ParseUnOrderedList()
-    {
-        IDocumentElement element = _documentParser.Parse(". ordered list item");
-
-        Assert.NotNull(element);
-        Assert.True(element is ListElement);
-    }
-
-    [Fact]
-    public void ParseOrderedList()
-    {
-        IDocumentElement element = _documentParser.Parse("* unordered list item");
-
-        Assert.NotNull(element);
-        Assert.True(element is ListElement);
-    }
-
-    [Fact]
-    public void ParseComment()
-    {
-        IDocumentElement element = _documentParser.Parse("// I am a comment and won't be rendered.");
-
-        Assert.NotNull(element);
-        Assert.True(element is CommentElement);
-    }
-
-    [Fact]
-    public void ParseImageReference()
-    {
-        IDocumentElement element = _documentParser.Parse("image::image-file-name.png[I am the image alt text.]");
-
-        Assert.NotNull(element);
-        Assert.True(element is ImageReferenceElement);
-    }
-
-    [Fact]
-    public void ParsePlainText()
-    {
-        IDocumentElement element =
-            _documentParser.Parse("This is a paragraph with a *bold* word and an _italicized_ word.");
-
-        Assert.NotNull(element);
-        Assert.True(element is InlineElement);
-    }
-
-
-    [Fact]
-    public void ParseFootnote()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "This is another paragraph.footnote:[I am footnote text and will be displayed at the bottom of the article.]");
-
-        Assert.NotNull(element);
-        Assert.True(element is InlineElement);
-    }
-
-
-    [Fact]
-    public void ParseExampleBlock()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "====\n    Content in an example block is subject to normal substitutions.\n    ====");
-
-        Assert.NotNull(element);
-        Assert.True(element is ExampleBlockElement);
-    }
-
-    [Fact]
-    public void ParseSideBar()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "****\n    Sidebars contain aside text and are subject to normal substitutions.\n    ****");
-
-        Assert.NotNull(element);
-        Assert.True(element is ExampleBlockElement);
-    }
-
-    [Fact]
-    public void ParseIdAttribute()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "[#id-for-listing-block]");
-
-        Assert.NotNull(element);
-        Assert.True(element is AttributeElement);
-    }
-
-    [Fact]
-    public void ParseListingBlock()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "----\n    Content in a listing block is subject to verbatim substitutions.\n    Listing block content is commonly used to preserve code input.\n    ----");
-
-        Assert.NotNull(element);
-        Assert.True(element is ListingBlockElement);
-    }
-
-
-    [Fact]
-    public void ParseTable()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "|===\n    |Column heading 1 |Column heading 2\n    \n    |Column 1, row 1\n    |Column 2, row 1\n    \n    |Column 1, row 2\n    |Column 2, row 2\n    |===\n    ");
-
-        Assert.NotNull(element);
-        Assert.True(element is TableElement);
-    }
-
-    [Fact]
-    public void ParseQuotation()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "[quote,firstname lastname,movie title]\n    ____\n    I am a block quote or a prose excerpt.\n    I am subject to normal substitutions.\n    ____");
-
-        Assert.NotNull(element);
-        Assert.True(element is QuotationElement);
-    }
-
-    [Fact]
-    public void ParseQuotation_without_attributes()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "____\n    I am a block quote or a prose excerpt.\n    I am subject to normal substitutions.\n    ____");
-
-        Assert.NotNull(element);
-        Assert.True(element is QuotationElement);
-    }
-
-    [Fact]
-    public void ParseQuotation_style_verse()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "[verse,firstname lastname,poem title and more]____I am a verse block.Indents and endlines are preserved in verse blocks.____");
-
-        Assert.NotNull(element);
-        Assert.True(element is QuotationElement);
-    }
-
-    [Fact]
-    public void ParseTip()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "TIP: There are five admonition labels: Tip, Note, Important, Caution and Warning.");
-
-        Assert.NotNull(element);
-        // Assert.True(element is IDocumentElement);
-    }
-
-    [Fact]
-    public void ParseCrossReference()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "The text at the end of this sentence is cross referenced to <<_third_level_heading,the third level heading>>");
-
-        Assert.NotNull(element);
-        Assert.True(element is InlineElement);
-    }
-
-    [Fact]
-    public void ParseAnchor()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "This is a link to the https://docs.asciidoctor.org/home/[Asciidoctor documentation].");
-
-        Assert.NotNull(element);
-        Assert.True(element is InlineElement);
-    }
-
-    [Fact]
-    public void ParseQuickReference()
-    {
-        IDocumentElement element = _documentParser.Parse(
-            "This is an attribute reference {url-quickref}[that links this text to the AsciiDoc Syntax Quick Reference].");
-
-        Assert.NotNull(element);
-        Assert.True(element is InlineElement);
-    }
-
-    //= AsciiDoc Article Title  
-    // Firstname Lastname <author@asciidoctor.org>
-    // 3.0, July 29, 2022: AsciiDoc article template
-    // 
-    // :icons: font
 }

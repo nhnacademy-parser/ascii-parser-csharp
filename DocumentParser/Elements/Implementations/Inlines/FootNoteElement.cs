@@ -1,28 +1,22 @@
-using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations.Inlines
 {
-    public class ParagraphElement : LineElement
+    public class FootNoteElement : LineElement
     {
-        public ParagraphElement()
+        public FootNoteElement()
         {
         }
 
-        public ParagraphElement(string paragraph) : base(paragraph)
-        {
-        }
-
-        public string Paragraph
+        public string Footnote
         {
             get => Value;
             set => Value = value;
         }
 
-
-        public override string ToString()
+        public FootNoteElement(string footnote) : base(footnote)
         {
-            return "paragraph {" + Paragraph + "}";
+            Footnote = footnote;
         }
         
         public override string Accept(IDocumentVisitor visitor)

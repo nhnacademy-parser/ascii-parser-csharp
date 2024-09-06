@@ -8,11 +8,11 @@ namespace DocumentParser.Elements.Implementations.Blocks.Lists
 {
     public class ListElement : SingleContainerBlockElement
     {
-        public object Accept(IDocumentVisitor visitor)
+        public override string Accept(IDocumentVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            return visitor.Visit(this);
         }
-
-        public IDocumentElement Value => Children[0];
+        
+        
     }
 }

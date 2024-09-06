@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DocumentParser.Domains.Trees;
+using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations
 {
@@ -45,6 +46,11 @@ namespace DocumentParser.Elements.Implementations
             builder.Append("}");
 
             return builder.ToString();
+        }
+        
+        public override string Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
         }
     }
 }

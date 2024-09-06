@@ -12,11 +12,10 @@ namespace DocumentParser.Elements.Implementations.Addition
         {
         }
 
-        public object Accept(IDocumentVisitor visitor)
+          public string Accept(IDocumentVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            return visitor.Visit(this);
         }
-
         public ITree<IDocumentElement> Parent { get; set; }
     }
 }

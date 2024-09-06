@@ -5,7 +5,7 @@ namespace DocumentParser.Elements
 {
     public interface IDocumentElement
     {
-        object Accept(IDocumentVisitor visitor);
+        string Accept(IDocumentVisitor visitor);
         ITree<IDocumentElement> Parent { get; set; }
     }
 }

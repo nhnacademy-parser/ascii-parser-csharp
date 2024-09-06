@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,26 +12,18 @@ namespace DocumentParser.Domains.Htmls
         private const char Indent = '\t';
         private const char DoubleQuotes = '\"';
 
-        private HtmlTag()
-        {
-        }
-
-        public static string TagBlock(string tagName, string value, params KeyValuePair<string, string[]>[] attributes)
+        public static string TagBlock(string tagName, string value, List<TagAttribute> attributes)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("<");
             sb.Append(tagName);
-            foreach (KeyValuePair<string, string[]> attribute in attributes)
+            foreach (TagAttribute attribute in attributes)
             {
                 sb.Append(" ");
-                sb.Append(attribute.Key).Append("=")
+                sb.Append(attribute.Name).Append("=")
                     .Append(DoubleQuotes);
 
-                foreach (string v in attribute.Value)
-                {
-                    sb.Append(v);
-                    sb.Append(" ");
-                }
+                sb.Append(attribute.ValueString);
 
                 sb.Append(DoubleQuotes);
             }
@@ -45,27 +39,39 @@ namespace DocumentParser.Domains.Htmls
 
         public static string TagBlock(string tagName, string value)
         {
-            return TagBlock(tagName, value, new KeyValuePair<string, string[]>[] { });
-        }
-
-        public static string TagBlock(string tagName, string value, params KeyValuePair<string, string>[] attributes)
-        {
-            KeyValuePair<string, string[]>[] attributesArray = new KeyValuePair<string, string[]>[attributes.Length];
-
-            int i = 0;
-            foreach (KeyValuePair<string, string> attribute in attributes)
-            {
-                attributesArray.SetValue(
-                    new KeyValuePair<string, string[]>(attribute.Key, new string[] { attribute.Value }), i);
-                i++;
-            }
-
-            return TagBlock(tagName, value, attributesArray);
+            return TagBlock(tagName, value, list => { });
         }
 
         public static string TagBlock(string tagName, string value, string attributeName, string attributeValue)
         {
-            return TagBlock(tagName, value, new KeyValuePair<string, string>(attributeName, attributeValue));
+            return TagBlock(tagName, value, new TagAttribute(attributeName, attributeValue));
+        }
+
+        public static string TagBlock(string tagName, string value, TagAttribute attribute)
+        {
+            return TagBlock(tagName, value, list => { list.Add(attribute); });
+        }
+
+        public static string TagBlock(string tagName, string value, Action<List<TagAttribute>> action)
+        {
+            List<TagAttribute> attributes = new List<TagAttribute>();
+            action(attributes);
+            
+            return TagBlock(tagName, value, attributes);
+        }    
+
+    }
+
+    public class TagAttribute
+    {
+        public string Name { get; }
+        public string[] Values { get; }
+        public string ValueString => string.Join(" ",Values);
+
+        public TagAttribute(string name, params string[] values)
+        {
+            Name = name;
+            Values = values;
         }
     }
 }

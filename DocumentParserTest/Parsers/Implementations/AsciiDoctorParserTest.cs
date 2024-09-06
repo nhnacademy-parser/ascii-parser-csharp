@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Reflection;
 using DocumentParser.Domain;
+using DocumentParser.Domains.Trees;
 using DocumentParser.Elements;
 using DocumentParser.Elements.Implementations;
 using DocumentParser.Elements.Implementations.Addition;
@@ -220,19 +221,20 @@ public class AsciiDoctorParserTest
         Assert.True(output.Count == 3);
         Assert.True(output[0] is TitleElement);
         Assert.True((output[0] as TitleElement).Children.Count == 1);
-        Assert.True(output[1] is ParagraphElement);
+        Assert.Equal(typeof(InlineElement), output[1].GetType());
         Assert.True(output[2] is ListContainerElement);
     }
+
     [Fact]
     void Parse_OrderedListElement()
     {
-        string input = 
+        string input =
             ". ordered list item 1\n" +
-            ".. nested ordered list item 1 - 1\n" + 
-            "... nested nested ordered list item 1 - 1 - 1\n" + 
+            ".. nested ordered list item 1 - 1\n" +
+            "... nested nested ordered list item 1 - 1 - 1\n" +
             "... nested nested ordered list item 1 - 1 - 2\n" +
             ".. nested ordered list item 1 - 2\n" +
-            "... nested nested ordered list item 1 - 2 - 1\n" + 
+            "... nested nested ordered list item 1 - 2 - 1\n" +
             ". ordered list item 2\n" +
             ". ordered list item 3\n";
 
@@ -245,8 +247,9 @@ public class AsciiDoctorParserTest
     [Fact]
     void Table_Element()
     {
-        string input = "===== Fourth level heading\n\n.Table title\n|===\n|Column heading 1 |Column heading 2\n\n|Column 1, row 1\n|Column 2, row 1\n\n|Column 1, row 2\n|Column 2, row 2\n|===\n";
-        
+        string input =
+            "===== Fourth level heading\n\n.Table title\n|===\n|Column heading 1 |Column heading 2\n\n|Column 1, row 1\n|Column 2, row 1\n\n|Column 1, row 2\n|Column 2, row 2\n|===\n";
+
         List<IDocumentElement> output = _documentParser.Parse(input);
 
         Assert.NotNull(output);
@@ -255,7 +258,54 @@ public class AsciiDoctorParserTest
         Assert.True(output[0] is SectionTitleElement);
     }
 
-    // [Fact]
+    [Fact]
+    void Parse_ImageReference()
+    {
+        string input =
+            ".Image caption\nimage::image-file-name.png[I am the image alt text.]";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal("image-file-name.png",
+            (((output[0] as TitleElement)?.Value as InlineElement)?.Children[0] as ImageReferenceElement)?.ImageReference);
+        Assert.Equal("I am the image alt text.",
+            (((output[0] as TitleElement)?.Value as InlineElement)?.Children[0] as ImageReferenceElement)?.AltText);
+    }
+
+    [Fact]
+    void Parse_Comment()
+    {
+        string input =
+            "///This is Comment, I am a comment and won't be rendered.";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal(typeof(InlineElement), output[0].GetType());
+        Assert.Equal("/This is Comment, I am a comment and won't be rendered.", ((output[0] as InlineElement).Children[0] as CommentElement)?.Comment);
+    }
+
+    [Fact]
+    void Parse_CrossReference()
+    {
+        string input =
+            "<<_third_level_heading,the third level heading>>";
+
+        List<IDocumentElement> output = _documentParser.Parse(input);
+
+        Assert.NotNull(output);
+        Assert.True(output.Count == 1);
+        Assert.Equal(typeof(InlineElement), output[0].GetType());
+        Assert.Equal("_third_level_heading",
+            ((output[0] as InlineElement)?.Children[0] as CrossReferenceElement)?.CrossReference);
+        Assert.Equal("the third level heading",
+            ((output[0] as InlineElement)?.Children[0] as CrossReferenceElement)?.AltText);
+    }   
+
+    [Fact]
     void Parse_Adoc()
     {
         string filename = "DocumentParserTest.Resources.Asciidocs.template.adoc";

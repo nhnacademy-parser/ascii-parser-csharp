@@ -24,7 +24,8 @@ namespace DocumentParser.Factories.Implementations
             }
             else if (element is SectionTitleElement section)
             {
-                section.Title = groups[1].Value;
+                section.Title = groups[2].Value;
+                section.Level = groups[1].Length;
             }
             else if (element is AttributeEntryElement attributeEntry)
             {
@@ -53,11 +54,42 @@ namespace DocumentParser.Factories.Implementations
             else if (element is BlockElement block)
             {
             }
+            else if (element is ImageReferenceElement imageReference)
+            {
+                imageReference.ImageReference = groups[1].Value;
+                imageReference.AltText = groups[2].Value;
+            }
+            else if (element is AnchorElement anchor)
+            {
+                anchor.Reference = groups[1].Value;
+                anchor.AltText = groups[2].Value;
+            }
+            else if (element is CommentElement comment)
+            {
+                comment.Comment = groups[1].Value;
+            }
+            else if (element is BoldTextElement boldText)
+            {
+                boldText.BoldText = groups[1].Value;
+            }
+            else if (element is ItalicTextElement italicText)
+            {
+                italicText.ItalicText = groups[1].Value;
+            }
+            else if (element is CrossReferenceElement crossReference)
+            {
+                crossReference.CrossReference = groups[1].Value;
+                crossReference.AltText = groups[2].Value;
+            }
+            else if (element is FootNoteElement footNote)
+            {
+                footNote.Footnote = groups[1].Value;
+            }
             else
             {
                 throw new NotImplementedException();
             }
-
+            
             return element;
         }
     }

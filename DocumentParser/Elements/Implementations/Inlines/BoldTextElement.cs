@@ -1,34 +1,27 @@
-using DocumentParser.Domains.Trees;
 using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations.Inlines
 {
-    public class ParagraphElement : LineElement
+    public class BoldTextElement : LineElement
     {
-        public ParagraphElement()
+        public BoldTextElement()
         {
         }
 
-        public ParagraphElement(string paragraph) : base(paragraph)
+        public BoldTextElement(string boldText) : base(boldText)
         {
+            BoldText = boldText;
         }
 
-        public string Paragraph
+
+        public string BoldText
         {
             get => Value;
             set => Value = value;
         }
-
-
-        public override string ToString()
-        {
-            return "paragraph {" + Paragraph + "}";
-        }
-        
         public override string Accept(IDocumentVisitor visitor)
         {
             return visitor.Visit(this);
         }
-
     }
 }

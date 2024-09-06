@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DocumentParser.Domains.Nodes;
 using DocumentParser.Elements.Implementations.Inlines;
+using DocumentParser.Visitors;
 
 namespace DocumentParser.Elements.Implementations.Blocks.Lists
 {
@@ -10,10 +11,16 @@ namespace DocumentParser.Elements.Implementations.Blocks.Lists
         {
             ListElement listElement = new ListElement();
             listElement.Children.Add(child);
-            
+
             child.Parent = this;
-            
+
             AddChild(listElement);
+        }       
+        
+        public void AddChild(ListContainerElement child)
+        {
+            Children.Add(child);
+            child.Parent = this;
         }
 
         public void AddChild(ListElement child)
@@ -25,6 +32,11 @@ namespace DocumentParser.Elements.Implementations.Blocks.Lists
         public void AddChild(string child)
         {
             AddChild(new ParagraphElement() { Paragraph = child });
+        }
+        
+        public override string Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
         }
     }
 }

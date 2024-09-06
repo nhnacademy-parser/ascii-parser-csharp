@@ -18,8 +18,7 @@ public class HtmlTagTest
     public void METHOD()
     {
         string h1 = HtmlTag.TagBlock("h1", "title",
-            new KeyValuePair<string, string[]>[1]
-                { new KeyValuePair<string, string[]>("class", new string[] { "title", "href" }) }
+            new TagAttribute("class", "title", "href")
         );
 
         _testOutputHelper.WriteLine(h1);

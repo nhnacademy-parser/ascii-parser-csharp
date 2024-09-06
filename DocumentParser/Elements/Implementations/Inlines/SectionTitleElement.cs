@@ -5,14 +5,19 @@ namespace DocumentParser.Elements.Implementations.Inlines
 {
     public class SectionTitleElement : IDocumentElement
     {
-
-        public string Title { get; set; }
-
-        public object Accept(IDocumentVisitor visitor)
+        public SectionTitleElement()
         {
-            throw new System.NotImplementedException();
         }
 
+        public string Title { get; set; }
+        public int Level { get; set; }
+        
         public ITree<IDocumentElement> Parent { get; set; }
+        
+        public string Accept(IDocumentVisitor visitor)
+        {
+            return visitor.Visit(this);
+        }
+
     }
 }

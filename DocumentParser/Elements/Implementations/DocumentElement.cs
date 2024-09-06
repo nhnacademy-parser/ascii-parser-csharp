@@ -6,12 +6,11 @@ namespace DocumentParser.Elements.Implementations
 {
     public class DocumentElement : IDocumentElement
     {
-        public object Accept(IDocumentVisitor visitor)
+        public virtual string Accept(IDocumentVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            return visitor.Visit(this);
         }
 
-        IDocumentElement Title { get; set; }
         Dictionary<string, string> Attributes { get; } = new Dictionary<string, string>();
 
         public void AddAttribute(string key, string value)

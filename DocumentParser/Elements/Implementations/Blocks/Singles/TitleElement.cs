@@ -6,10 +6,10 @@ namespace DocumentParser.Elements.Implementations.Blocks.Singles
     public class TitleElement: SingleContainerBlockElement
     {
         public string Title { get; set; }
-        public object Accept(IDocumentVisitor visitor)
+        
+        public override string Accept(IDocumentVisitor visitor)
         {
-            throw new System.NotImplementedException();
+            return visitor.Visit(this);
         }
-
     }
 }

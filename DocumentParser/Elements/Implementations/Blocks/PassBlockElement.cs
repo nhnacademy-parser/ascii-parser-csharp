@@ -1,6 +1,6 @@
 namespace DocumentParser.Elements.Implementations.Blocks
 {
-    public class PassBlockElement
+    public class PassBlockElement : BlockElement
     {
         
     }

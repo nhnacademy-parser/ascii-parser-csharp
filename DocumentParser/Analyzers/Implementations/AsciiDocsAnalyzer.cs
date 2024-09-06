@@ -43,30 +43,15 @@ namespace DocumentParser.Analyzers.Implementations
 
             if (_syntaxMap.ContainsKey(index))
             {
-                List<AsciiDocSyntax> list = _syntaxMap.GetValueOrDefault(index);
-
-                foreach (AsciiDocSyntax syntax in list)
+                List<AsciiDocSyntax> list = _syntaxMap[index];
+                AsciiDocSyntax s = list.Find(s => s.Pattern.IsMatch(context));
+                if (s != null)
                 {
-                    if (syntax.Pattern.IsMatch(context))
-                    {
-                        return syntax;
-                    }
-                }
-            }
-            else
-            {
-                foreach (AsciiDocSyntax syntax in _inlineSyntax)
-                {
-                    Match match = syntax.Pattern.Match(context);
-
-                    if (match.Success)
-                    {
-                        return syntax;
-                    }
+                    return s;
                 }
             }
 
-            return new AsciiDocSyntax(string.Empty, new Regex("(.*)"), typeof(ParagraphElement));
+            return _inlineSyntax.Find(s => s.Pattern.IsMatch(context));
         }
     }
 }

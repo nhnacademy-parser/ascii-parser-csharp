@@ -70,14 +70,19 @@ namespace DocumentParser.Parsers.Implementations
                 Type type = syntax.InstanceType;
                 Regex regex = syntax.Pattern;
                 GroupCollection groups = regex.Match(line).Groups;
+                Cartridge<IDocumentElement> cartridge = new Cartridge<IDocumentElement>();
 
                 IDocumentElement element = factory.Create(type, groups);
-
-                Cartridge<IDocumentElement> cartridge = new Cartridge<IDocumentElement>();
                 cartridge.Add(element);
 
-
-                if (element is BlockElement block)
+                if (type.IsSubclassOf(typeof(LineElement)))
+                {
+                    cartridge.Remove();
+                    InlineElement inline = new InlineElement();
+                    inline.AddChild(ParseLineElement(line));
+                    cartridge.Add(inline);
+                }
+                else if (element is BlockElement block)
                 {
                     if (block.GetType().IsSubclassOf(typeof(ListContainerElement)))
                     {
@@ -90,14 +95,14 @@ namespace DocumentParser.Parsers.Implementations
                         {
                             string subLine = contextQueue.Peek();
                             AsciiDocSyntax subSyntax = _syntaxAnalyzer.Analyze(subLine) as AsciiDocSyntax;
-                            Type subType = subSyntax.InstanceType;
-
+                            
                             if (string.IsNullOrWhiteSpace(subLine))
                             {
                                 breakMethod.Add(contextQueue.Dequeue());
                                 continue;
                             }
 
+                            Type subType = subSyntax.InstanceType;
                             if (subType == typeof(ParagraphElement))
                             {
                                 if (breakMethod.IsFilled)
@@ -172,28 +177,7 @@ namespace DocumentParser.Parsers.Implementations
                         }
                         else
                         {
-                            try
-                            {
-                                if (blockStack.Count > 0)
-                                {
-                                    BlockElement blockElement = blockStack.Peek();
-                                    blockElement.AddChild(cartridge.TryRemove());
-
-                                    if (blockElement.IsFulled())
-                                    {
-                                        blockStack.Pop();
-
-                                        RemoveDictionary(delimiterDictionary, blockElement);
-                                    }
-                                }
-                                else
-                                {
-                                    elements.Enqueue(cartridge.TryRemove());
-                                }
-                            }
-                            catch (InvalidOperationException ignore)
-                            {
-                            }
+                            NewMethod(blockStack, cartridge, delimiterDictionary, elements);
 
                             blockStack.Push(block);
                             delimiterDictionary[delimiter] = block;
@@ -213,29 +197,65 @@ namespace DocumentParser.Parsers.Implementations
                     // 헤더에 저장
                 }
 
-                try
-                {
-                    if (blockStack.Count > 0)
-                    {
-                        BlockElement blockElement = blockStack.Peek();
-                        blockElement.AddChild(cartridge.TryRemove());
-                        if (blockElement.IsFulled())
-                        {
-                            blockStack.Pop();
-                        }
-                    }
-                    else
-                    {
-                        elements.Enqueue(cartridge.TryRemove());
-                    }
-                }
-                catch (InvalidOperationException e)
-                {
-                    Console.WriteLine(e);
-                }
+                NewMethod(blockStack, cartridge, delimiterDictionary, elements);
             }
 
             return elements.ToList();
+        }
+
+        private LineElement ParseLineElement(string line)
+        {
+            IDocumentElementFactory factory = new AsciiDocElementFactory();
+            AsciiDocSyntax syntax = _syntaxAnalyzer.Analyze(line) as AsciiDocSyntax;
+            Type type = syntax.InstanceType;
+            Regex regex = syntax.Pattern;
+            Match match = regex.Match(line);
+            GroupCollection groups = regex.Match(line).Groups;
+
+            IDocumentElement element = factory.Create(type, groups) ;
+            string pre = line[..match.Index];
+            string post = line[(match.Index + match.Length)..];
+
+            LineElement head = element as LineElement;
+            
+            if (!string.IsNullOrWhiteSpace(pre))
+            {
+                head = ParseLineElement(pre).Append(head) as LineElement;
+            }
+
+            if (!string.IsNullOrWhiteSpace(post))
+            {
+                head.Append(ParseLineElement(post));
+            }
+
+            return head;
+        }
+
+        private void NewMethod(Stack<BlockElement> blockStack, Cartridge<IDocumentElement> cartridge,
+            Dictionary<string, BlockElement> delimiterDictionary, Queue<IDocumentElement> elements)
+        {
+            try
+            {
+                if (blockStack.Count > 0)
+                {
+                    BlockElement blockElement = blockStack.Peek();
+                    blockElement.AddChild(cartridge.TryRemove());
+                    if (blockElement.IsFulled())
+                    {
+                        blockStack.Pop();
+
+                        RemoveDictionary(delimiterDictionary, blockElement);
+                    }
+                }
+                else
+                {
+                    elements.Enqueue(cartridge.TryRemove());
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         private void RemoveDictionary(Dictionary<string, BlockElement> delimiterDictionary,

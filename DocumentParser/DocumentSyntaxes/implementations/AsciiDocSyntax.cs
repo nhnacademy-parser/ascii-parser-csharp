@@ -37,51 +37,50 @@ namespace DocumentParser.DocumentSyntaxes.implementations
 
         public IEnumerator<AsciiDocSyntax> GetEnumerator()
         {
-            yield return new AsciiDocSyntax("=", new Regex("={1,} +(.*)"), typeof(SectionTitleElement));
-            yield return new AsciiDocSyntax(":", new Regex(":([^ ].+):(.*)"), typeof(AttributeEntryElement));
+            yield return new AsciiDocSyntax("=", new Regex("^(={1,}) +(.*)"), typeof(SectionTitleElement));
+            yield return new AsciiDocSyntax(":", new Regex("^:([^ ].+):(.*)"), typeof(AttributeEntryElement));
 
             // Block, Structural containers
 
-            yield return new AsciiDocSyntax("/", new Regex("(/{4,})+$|(\n.*)"), typeof(CommentBlockElement));
-            yield return new AsciiDocSyntax("=", new Regex("(={4,})+$|(\n.*)"), typeof(ExampleBlockElement));
-            yield return new AsciiDocSyntax("-", new Regex("(-{4,})+$|(\n.*)"), typeof(ListingBlockElement));
-            yield return new AsciiDocSyntax("-", new Regex("(-{2,})+$|(\n.*)"), typeof(OpenBlockElement));
-            yield return new AsciiDocSyntax("_", new Regex("(_{4,})+$|(\n.*)"), typeof(QuotationBlockElement));
-            yield return new AsciiDocSyntax(".", new Regex("(\\.{4,})+$|(\n.*)"), typeof(LiteralBlockElement));
-            yield return new AsciiDocSyntax("*", new Regex("(\\*{4,})+$|(\n.*)"), typeof(SideBarBlockElement));
-            yield return new AsciiDocSyntax("+", new Regex("(\\+{2,})+$|(\n.*)"), typeof(PassBlockElement));
+            yield return new AsciiDocSyntax("/", new Regex("^(/{4,})+$|(\n.*)"), typeof(CommentBlockElement));
+            yield return new AsciiDocSyntax("=", new Regex("^(={4,})+$|(\n.*)"), typeof(ExampleBlockElement));
+            yield return new AsciiDocSyntax("-", new Regex("^(-{4,})+$|(\n.*)"), typeof(ListingBlockElement));
+            yield return new AsciiDocSyntax("-", new Regex("^(-{2,})+$|(\n.*)"), typeof(OpenBlockElement));
+            yield return new AsciiDocSyntax("_", new Regex("^(_{4,})+$|(\n.*)"), typeof(QuotationBlockElement));
+            yield return new AsciiDocSyntax(".", new Regex("^(\\.{4,})+$|(\n.*)"), typeof(LiteralBlockElement));
+            yield return new AsciiDocSyntax("*", new Regex("^(\\*{4,})+$|(\n.*)"), typeof(SideBarBlockElement));
+            yield return new AsciiDocSyntax("+", new Regex("^(\\+{2,})+$|(\n.*)"), typeof(PassBlockElement));
 
             // Block, Table
-            yield return new AsciiDocSyntax("|", new Regex("(\\|={3,})+$|(\n.*)"), typeof(TableBlockElement));
-            yield return new AsciiDocSyntax(",", new Regex("(,={3,})+$|(\n.*)"), typeof(TableBlockElement));
-            yield return new AsciiDocSyntax(":", new Regex("(:={3,})+$|(\n.*)"), typeof(TableBlockElement));
-            yield return new AsciiDocSyntax("!", new Regex("(!={3,})+$|(\n.*)"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax("|", new Regex("^(\\|={3,})+$|(\n.*)"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax(",", new Regex("^(,={3,})+$|(\n.*)"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax(":", new Regex("^(:={3,})+$|(\n.*)"), typeof(TableBlockElement));
+            yield return new AsciiDocSyntax("!", new Regex("^(!={3,})+$|(\n.*)"), typeof(TableBlockElement));
 
 
-            yield return new AsciiDocSyntax(".", new Regex("^\\.([^ .])"), typeof(TitleElement));
+            yield return new AsciiDocSyntax(".", new Regex("^\\.([^ .]+.+)"), typeof(TitleElement));
             yield return new AsciiDocSyntax("[", new Regex("^\\[+(.*)+]"), typeof(SpecialBlockElement));
 
-            yield return new AsciiDocSyntax(".", new Regex("(\\.{1,})+ (.*)"), typeof(OrderedListContainerElement));
-            yield return new AsciiDocSyntax("*", new Regex("(\\*{1,})+ (.*)"), typeof(UnOrderedListContainerElement));
-            //
-            // yield return new AsciiDocSyntax("-", "-", typeof(UnOrderedListElement));
-            //
-            // yield return new AsciiDocSyntax("i", "^image::", typeof(ImageReferenceElement));
-            //
-            // yield return new AsciiDocSyntax("/", "//", typeof(CommentElement));
-            //
-            //
-            // yield return new AsciiDocSyntax(string.Empty, "<<+.+>>", typeof(CrossReferenceElement));
-            //
-            // yield return new AsciiDocSyntax(string.Empty, "(\\S+://)(.+)(\\[(.*)])", typeof(AnchorElement));
-            // yield return new AsciiDocSyntax(string.Empty, "(\\S+://[^ ]+)", typeof(AnchorElement));
-            //
-            // yield return new AsciiDocSyntax(string.Empty, "\\*(.*)\\*", typeof(BoldTextElement));
-            // yield return new AsciiDocSyntax(string.Empty, "_(.*)_", typeof(ItalicTextElement));
-            //
-            // yield return new AsciiDocSyntax(string.Empty, "footnote:\\[(.*)]", typeof(FootNoteElement));
+            yield return new AsciiDocSyntax(".", new Regex("^(\\.{1,})+ (.*)"), typeof(OrderedListContainerElement));
+            yield return new AsciiDocSyntax("*", new Regex("^(\\*{1,})+ (.*)"), typeof(UnOrderedListContainerElement));
+            yield return new AsciiDocSyntax("-", new Regex("^(\\-{1,})+ (.*)"), typeof(UnOrderedListContainerElement));
 
-            yield return new AsciiDocSyntax(string.Empty, new Regex("(.*)"), typeof(ParagraphElement));
+            yield return new AsciiDocSyntax("/", new Regex("^//(.*)"), typeof(CommentElement));
+            
+            yield return new AsciiDocSyntax("i", new Regex("^image::([^\\[]+)(?:\\[(.*)?\\])?$"),
+                typeof(ImageReferenceElement));
+            yield return new AsciiDocSyntax("i", new Regex("image:([^\\[]+)(?:\\[(.+)\\])?$"),
+                typeof(ImageReferenceElement));
+
+            yield return new AsciiDocSyntax(string.Empty, new Regex("<<(.+),(.+)?>>"), typeof(CrossReferenceElement));
+            yield return new AsciiDocSyntax(string.Empty, new Regex("(\\S+://.+)(?:\\[(.+)\\])"),
+                typeof(AnchorElement));
+            //
+            yield return new AsciiDocSyntax(string.Empty, "\\*(.*)\\*", typeof(BoldTextElement));
+            yield return new AsciiDocSyntax(string.Empty, "_(.*)_", typeof(ItalicTextElement));
+            yield return new AsciiDocSyntax(string.Empty, "footnote:\\[(.*)]", typeof(FootNoteElement));
+
+            yield return new AsciiDocSyntax(string.Empty, new Regex("(.*)?"), typeof(ParagraphElement));
         }
 
         IEnumerator IEnumerable.GetEnumerator()

@@ -25,19 +25,6 @@ namespace DocumentParser.Domain
         {
             _elements.Add(element);
         }
-        
-        public string Convert(HtmlConverter htmlConverter)
-        {
-            
-            StringBuilder sb = new StringBuilder();
-
-            foreach (IDocumentElement element in this)
-            {
-                sb.Append(element.Accept(htmlConverter));
-            }
-            
-            return sb.ToString();
-        }
 
         public IEnumerator<IDocumentElement> GetEnumerator()
         {

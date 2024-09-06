@@ -21,5 +21,7 @@ namespace DocumentParser.Elements.Implementations.Blocks.Singles
         {
             return base.Count > 0;
         }
+
+        public IDocumentElement Value => Children[0];
     }
 }
